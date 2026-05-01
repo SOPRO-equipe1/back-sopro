@@ -1,4 +1,16 @@
 package com.sopro.project_demoday.config;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-public class WebConfig {
-}
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                    .allowedOrigins("https://seu-projeto-sopro.vercel.app") // URL falsa por enquanto
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
+        }
+    }
+
