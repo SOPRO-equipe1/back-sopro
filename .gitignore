@@ -35,5 +35,5 @@ build/
 # --- SEGURANÇA E AMBIENTE  ---
 .env
 *.env
-application-local.properties
+application-dev.properties
 bin/
