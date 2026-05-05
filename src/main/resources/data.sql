@@ -1,5 +1,4 @@
-
-INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
-('comprar', 'O SOPRO pode ser adquirido através do nosso site oficial. Entre em contato com nosso time comercial para detalhes de valores.', 'financeiro'),
-('pratica', 'O wearable utiliza sensores de pressão e TinyML para traduzir padrões de sopro em frases pré-definidas no aplicativo.', 'tecnico'),
-('caso', 'O dispositivo é indicado para pessoas com limitações na fala ou motoras, mas que possuem controle respiratório.', 'suporte');
+-- Use uma instrução por linha e verifique se os nomes das colunas batem com a entidade
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('comprar', 'O SOPRO pode ser adquirido através do nosso site oficial. Entre em contato com nosso time comercial para detalhes de valores.', 'financeiro');
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('pratica', 'O wearable utiliza sensores de pressão e TinyML para traduzir padrões de sopro em frases pré-definidas no aplicativo.', 'tecnico');
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('caso', 'O dispositivo é indicado para pessoas com limitações na fala ou motoras, mas que possuem controle respiratório.', 'suporte');
