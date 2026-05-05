@@ -1,19 +1,20 @@
 package com.sopro.project_demoday.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Table(name = "TB CONHECIMENTO")
 @Entity
+
 public class Conhecimento {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String titulo;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String conteudo;
     private String metadados;
 
