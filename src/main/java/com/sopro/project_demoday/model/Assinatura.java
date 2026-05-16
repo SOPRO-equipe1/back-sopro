@@ -55,8 +55,8 @@ public class Assinatura {
         return expiracao;
     }
 
-    public void setExpericao(LocalDate expericao) {
-        this.expiracao = expericao;
+    public void setExpiricao(LocalDate expiricao) {
+        this.expiracao = expiricao;
     }
 
     public Usuario getUsuario() {
