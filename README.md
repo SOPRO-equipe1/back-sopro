@@ -28,7 +28,16 @@ O projeto segue o padrão **MVC** (Model-View-Controller) para garantir a separa
 ### Diagrama de Classes (UML)
 Abaixo encontra-se a modelagem das entidades principais: `Usuario`, `Assinatura` e `Conhecimento`.
 
-![UML](docs/driagrams/Sopro-backUML.jpg)
+
+
+
+  ![UML](docs/driagrams/Sopro-backUML.jpg)
+
+
+
+## DER
+
+![MER](docs/driagrams/sopro_modelagem_logica.png)
 
 ## 🛠️ Stack tecnológica
 
