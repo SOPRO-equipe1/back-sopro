@@ -1,6 +1,4 @@
 package com.sopro.project_demoday.model;
-
-
 import jakarta.persistence.*;
 
 @Table(name= "TB USUARIO")
