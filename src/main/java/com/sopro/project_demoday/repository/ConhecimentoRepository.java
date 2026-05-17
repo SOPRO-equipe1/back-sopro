@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface ReconhecimentoRepository extends JpaRepository<Conhecimento, Long> {
+public interface ConhecimentoRepository extends JpaRepository<Conhecimento, Long> {
 
     Optional<Conhecimento> findByTituloContainingIgnoreCase(String titulo);
 }
