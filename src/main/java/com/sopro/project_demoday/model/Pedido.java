@@ -34,11 +34,11 @@ public class Pedido {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    // Construtor Padrão (Obrigatório para o JPA)
+
     public Pedido() {
     }
 
-    // --- GETTERS E SETTERS ---
+
 
     public Long getId() {
         return id;
