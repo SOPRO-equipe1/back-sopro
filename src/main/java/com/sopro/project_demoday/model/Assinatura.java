@@ -3,9 +3,8 @@ package com.sopro.project_demoday.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
-@Table (name = "TB_ASSINATURA")
+@Table(name = "TB_ASSINATURA")
 @Entity
-
 public class Assinatura {
 
     @Id
@@ -19,26 +18,26 @@ public class Assinatura {
     @Column(name = "data_inicio", nullable = false)
     private LocalDate dataInicio;
 
-    @Column(name = "data_expericao", nullable = false)
+    @Column(name = "data_expericao", nullable = false) // Mantido o nome da coluna do seu banco
     private LocalDate expiracao;
 
     @OneToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-
+    // Construtor Padrão
     public Assinatura() {
     }
 
-    public Assinatura (StatusAssinatura status, LocalDate dataInicio, LocalDate expiracao, Usuario usuario) {
-
+    // Construtor Cheio
+    public Assinatura(StatusAssinatura status, LocalDate dataInicio, LocalDate expiracao, Usuario usuario) {
         this.status = status;
         this.dataInicio = dataInicio;
         this.expiracao = expiracao;
         this.usuario = usuario;
-
     }
 
+    // Getters e Setters corrigidos
     public Long getId() {
         return id;
     }
@@ -55,8 +54,9 @@ public class Assinatura {
         return expiracao;
     }
 
-    public void setExpiricao(LocalDate expiricao) {
-        this.expiracao = expiricao;
+    // Corrigido de setExpiricao para setExpiracao para bater com o padrão Java Bean
+    public void setExpiracao(LocalDate expiracao) {
+        this.expiracao = expiracao;
     }
 
     public Usuario getUsuario() {

@@ -1,4 +1,8 @@
--- Use uma instrução por linha e verifique se os nomes das colunas batem com a entidade
-INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('comprar', 'O SOPRO pode ser adquirido através do nosso site oficial. Entre em contato com nosso time comercial para detalhes de valores.', 'financeiro');
-INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('pratica', 'O wearable utiliza sensores de pressão e TinyML para traduzir padrões de sopro em frases pré-definidas no aplicativo.', 'tecnico');
-INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('caso', 'O dispositivo é indicado para pessoas com limitações na fala ou motoras, mas que possuem controle respiratório.', 'suporte');
+-- Certifique-se de usar uma instrução por linha e que os campos batam com a sua entidade Conhecimento
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('O que é o SOPRO', 'O SOPRO é uma tecnologia assistiva voltada para pessoas com limitações severas de fala ou motoras (como mutismo). Ele utiliza um dispositivo wearable com sensores de pressão que captam comandos físicos através do sopro.', 'institucional, escopo');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Como funciona a tecnologia', 'O dispositivo possui sensores conectados a um microcontrolador que mede a intensidade do sopro. Esses dados são processados localmente por um modelo de TinyML (Machine Learning embarcado) para identificar padrões e traduzi-los em voz sintetizada ou comandos no aplicativo.', 'tecnico, hardware, tinyml');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Público-alvo e Indicações', 'O sistema é indicado para pessoas com limitações na comunicação verbal que preservem a capacidade respiratória voluntária e controle dos músculos faciais para interagir com o bocal do sensor.', 'suporte, medico');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Preço e Comercialização', 'O projeto SOPRO está em fase de desenvolvimento e validação de protótipo para o DemoDay. Para informações sobre parcerias de pesquisa ou futuras aquisições comerciais, entre em contato com o nosso time através do site oficial.', 'comercial, financeiro');
