@@ -2,29 +2,24 @@ package com.sopro.project_demoday.model;
 
 import jakarta.persistence.*;
 
-@Table(name = "TB_CONHECIMENTO")
 @Entity
+@Table(name = "tb_conhecimento")
 public class Conhecimento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String titulo;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String conteudo;
 
+    @Column(columnDefinition = "TEXT")
     private String metadados;
 
     public Conhecimento() {
-    }
-
-    public Conhecimento(String titulo, String conteudo, String metadados) {
-        this.titulo = titulo;
-        this.conteudo = conteudo;
-        this.metadados = metadados;
     }
 
     public Long getId() {

@@ -3,23 +3,29 @@ package com.sopro.project_demoday.service;
 import com.sopro.project_demoday.dto.PerfilResponseDTO;
 import com.sopro.project_demoday.dto.SalvarPerfilDTO;
 import com.sopro.project_demoday.model.Endereco;
-import com.sopro.project_demoday.model.Pedido;
 import com.sopro.project_demoday.model.Usuario;
-import com.sopro.project_demoday.repository.PedidoRepository;
+import com.sopro.project_demoday.model.Pedido;
+import com.sopro.project_demoday.model.Assinatura;
 import com.sopro.project_demoday.repository.UsuarioRepository;
+import com.sopro.project_demoday.repository.PedidoRepository;
+import com.sopro.project_demoday.repository.AssinaturaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
+import java.math.BigDecimal;
 
 @Service
 public class PerfilService {
 
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
+    private final AssinaturaRepository assinaturaRepository;
 
     // Construtor manual para Injeção de Dependência (substituindo o @RequiredArgsConstructor)
-    public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository) {
+    public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository, AssinaturaRepository assinaturaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
+        this.assinaturaRepository = assinaturaRepository;
     }
 
 
@@ -41,15 +47,18 @@ public class PerfilService {
                     ultimoPedido.getStatusStatus(),
                     ultimoPedido.getCodigoRastreio(),
                     ultimoPedido.getDataEntregaPrevista(),
-                    ultimoPedido.getValorTotal()
+                    BigDecimal.valueOf(ultimoPedido.getValorTotal() != null ? ultimoPedido.getValorTotal() : 0.0)
             );
         }
 
         //  para definir textualmente o Plano com base na assinatura
         String nomePlano = "Plano Free";
-        if (usuario.getAssinatura() != null && usuario.getAssinatura().getStatus() != null) {
-
-            nomePlano = usuario.getAssinatura().getStatus().name();
+        Optional<Assinatura> assinatura = assinaturaRepository.findAll().stream()
+                .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
+                .findFirst();
+        
+        if (assinatura.isPresent() && assinatura.get().getStatus() != null) {
+            nomePlano = assinatura.get().getStatus().name();
         }
 
 

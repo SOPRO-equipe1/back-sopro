@@ -3,7 +3,7 @@ package com.sopro.project_demoday.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "tb_enderecos")
+@Table(name = "endereco")
 public class Endereco {
 
     @Id
@@ -11,10 +11,10 @@ public class Endereco {
     private Long id;
 
     @Column(nullable = false)
-    private String logradouro; // Guardará: "Rua do Suspiro Profundo, 42"
+    private String logradouro;
 
     @Column(nullable = false)
-    private String complemento; // Guardará: "Ao lado da Suspiro News"
+    private String complemento;
 
 
     public Endereco() {

@@ -1,11 +1,11 @@
 package com.sopro.project_demoday.model;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.sopro.project_demoday.model.Usuario;
 
 @Entity
-@Table(name = "tb_pedidos")
+@Table(name = "pedido")
 public class Pedido {
 
     @Id
@@ -13,32 +13,29 @@ public class Pedido {
     private Long id;
 
     @Column(name = "codigo_pedido", nullable = false, unique = true)
-    private String codigoPedido; // Ex: "#SP-2026-01"
+    private String codigoPedido;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_email", referencedColumnName = "email", nullable = false)
+    private Usuario usuario;
 
     @Column(name = "produto_descricao", nullable = false)
-    private String produtoDescricao; // Ex: "1x Dispositivo Sopro - Cor Preta"
+    private String produtoDescricao;
 
     @Column(name = "status_status", nullable = false)
-    private String statusStatus; // CONFIRMADO, PREPARANDO, EM_TRANSPORTE, ENTREGUE
+    private String statusStatus;
 
     @Column(name = "codigo_rastreio")
-    private String codigoRastreio; // Ex: "RU182121051419BR"
+    private String codigoRastreio;
 
     @Column(name = "data_entrega_prevista")
     private LocalDate dataEntregaPrevista;
 
     @Column(name = "valor_total", nullable = false)
-    private BigDecimal valorTotal;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
-
+    private Double valorTotal;
 
     public Pedido() {
     }
-
-
 
     public Long getId() {
         return id;
@@ -54,6 +51,14 @@ public class Pedido {
 
     public void setCodigoPedido(String codigoPedido) {
         this.codigoPedido = codigoPedido;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     public String getProdutoDescricao() {
@@ -88,19 +93,11 @@ public class Pedido {
         this.dataEntregaPrevista = dataEntregaPrevista;
     }
 
-    public BigDecimal getValorTotal() {
+    public Double getValorTotal() {
         return valorTotal;
     }
 
-    public void setValorTotal(BigDecimal valorTotal) {
+    public void setValorTotal(Double valorTotal) {
         this.valorTotal = valorTotal;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
     }
 }
