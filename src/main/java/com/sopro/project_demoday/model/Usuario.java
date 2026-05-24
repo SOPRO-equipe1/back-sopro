@@ -4,17 +4,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import com.sopro.project_demoday.model.enums.RoleUsuario;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_usuario")
-public class Usuario {
+public class Usuario implements UserDetails { // <-- Adicione o implements UserDetails aqui!
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,10 +42,10 @@ public class Usuario {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Assinatura assinatura;
 
+    private String senha; // Campo necessário para a autenticação
 
     public Usuario() {
     }
-
 
     public Usuario(String email, String nomeCompleto, String cpf, String telefoneCelular, LocalDate dataNascimento, String cityState, Endereco endereco) {
         this.email = email;
@@ -58,6 +55,43 @@ public class Usuario {
         this.dataNascimento = dataNascimento;
         this.cidadeEstado = cityState;
         this.endereco = endereco;
+    }
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+
+        return List.of(new SimpleGrantedAuthority("ROLE_USUARIO"));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.senha;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
 
@@ -134,5 +168,7 @@ public class Usuario {
         this.assinatura = assinatura;
     }
 
-
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
 }
