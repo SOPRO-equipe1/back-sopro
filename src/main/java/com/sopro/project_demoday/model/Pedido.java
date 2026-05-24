@@ -3,6 +3,7 @@ package com.sopro.project_demoday.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.sopro.project_demoday.model.Usuario;
 
 @Entity
 @Table(name = "tb_pedido")

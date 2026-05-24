@@ -8,6 +8,7 @@ import java.util.Optional; // Garanta este import
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    // Altere de Usuario para Optional<Usuario>
+    // O retorno PRECISA ser Optional<Usuario> para aceitar o .orElseThrow()
     Optional<Usuario> findByEmail(String email);
+    boolean existsByEmail(String email);
 }

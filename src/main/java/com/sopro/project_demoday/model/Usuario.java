@@ -1,7 +1,16 @@
 package com.sopro.project_demoday.model;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import com.sopro.project_demoday.model.enums.RoleUsuario;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
 
 @Entity
 @Table(name = "tb_usuario")
@@ -124,4 +133,6 @@ public class Usuario {
     public void setAssinatura(Assinatura assinatura) {
         this.assinatura = assinatura;
     }
+
+
 }

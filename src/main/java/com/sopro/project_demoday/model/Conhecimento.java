@@ -16,12 +16,14 @@ public class Conhecimento {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String conteudo;
 
+    @Column(columnDefinition = "TEXT")
     private String metadados;
 
     public Conhecimento() {
     }
 
-    public Conhecimento(String titulo, String conteudo, String metadados) {
+    public Conhecimento(Long id, String titulo, String conteudo, String metadados) {
+        this.id = id;
         this.titulo = titulo;
         this.conteudo = conteudo;
         this.metadados = metadados;
