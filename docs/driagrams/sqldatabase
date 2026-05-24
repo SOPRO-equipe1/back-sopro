@@ -1,0 +1,78 @@
+
+CREATE DATABASE sopro_db;
+USE sopro_db;
+
+
+CREATE TABLE tb_endereco (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cep VARCHAR(9) NOT NULL,
+    logradouro VARCHAR(255) NOT NULL,
+    numero VARCHAR(20) NOT NULL,
+    complemento VARCHAR(255),
+    bairro VARCHAR(255) NOT NULL,
+    cidade VARCHAR(255) NOT NULL,
+    estado VARCHAR(2) NOT NULL
+);
+
+
+CREATE TABLE tb_usuario (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    nome_completo VARCHAR(255) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    telefone_celular VARCHAR(15) NOT NULL,
+    data_nascimento DATE NOT NULL,
+    cidade_estado VARCHAR(255) NOT NULL,
+    endereco_id BIGINT,
+    CONSTRAINT fk_usuario_endereco FOREIGN KEY (endereco_id) 
+        REFERENCES tb_endereco(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE tb_assinatura (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    plano VARCHAR(50),
+    status VARCHAR(50), 
+    data_inicio DATETIME,
+    data_expiracao DATETIME,
+    usuario_id BIGINT NOT NULL UNIQUE,
+    CONSTRAINT fk_assinatura_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES tb_usuario(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE tb_pedido (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    codigo_pedido VARCHAR(255) NOT NULL UNIQUE,
+    produto_descricao VARCHAR(255) NOT NULL,
+    status_status VARCHAR(255) NOT NULL,
+    codigo_rastreio VARCHAR(255),
+    data_entrega_prevista DATE,
+    valor_total DECIMAL(19, 2) NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    CONSTRAINT fk_pedido_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES tb_usuario(id)
+);
+
+
+CREATE TABLE tb_pagamentos (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    valor DECIMAL(19, 2),
+    forma_pagamento VARCHAR(255),
+    status VARCHAR(255),
+    transaction_id VARCHAR(255),
+    data_pagamento DATETIME,
+    usuario_id BIGINT NOT NULL,
+    CONSTRAINT fk_pagamento_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES tb_usuario(id)
+);
+
+-- Tabela do Chatbot 
+CREATE TABLE tb_conhecimento (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    conteudo TEXT NOT NULL,
+    metadados VARCHAR(255)
+);
+
+SELECT * FROM sopro_db;
