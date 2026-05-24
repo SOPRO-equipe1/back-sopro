@@ -16,23 +16,22 @@ public class PerfilService {
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
 
-    // Construtor manual para Injeção de Dependência (substituindo o @RequiredArgsConstructor)
+    // Construtor manual para Injeção de Dependência
     public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
     }
 
-
     public PerfilResponseDTO obterPerfilPorEmail(String email) {
-
+        // 1. Busca o usuário pelo e-mail
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-
+        // 2. Busca o último pedido realizado por este usuário
         Pedido ultimoPedido = pedidoRepository.findFirstByUsuarioEmailOrderByIdDesc(email)
                 .orElse(null);
 
-        // DTO interno do pedido caso ele exista
+        // Estrutura o DTO interno do pedido caso ele exista
         PerfilResponseDTO.UltimoPedidoDTO pedidoDTO = null;
         if (ultimoPedido != null) {
             pedidoDTO = new PerfilResponseDTO.UltimoPedidoDTO(
@@ -45,20 +44,27 @@ public class PerfilService {
             );
         }
 
-        //  para definir textualmente o Plano com base na assinatura
+
         String nomePlano = "Plano Free";
         if (usuario.getAssinatura() != null && usuario.getAssinatura().getStatus() != null) {
 
-            nomePlano = usuario.getAssinatura().getStatus().name();
+            if ("ATIVO".equalsIgnoreCase(usuario.getAssinatura().getStatus().toString())) {
+                nomePlano = "Plano Premium";
+            }
         }
 
 
-        String enderecoCompleto = "Endereço não preenchido";
+        String addressText = "Endereço não preenchido";
         if (usuario.getEndereco() != null) {
-            enderecoCompleto = usuario.getEndereco().getLogradouro() + " - " + usuario.getEndereco().getComplemento();
+            String logradouro = usuario.getEndereco().getLogradouro() != null ? usuario.getEndereco().getLogradouro() : "";
+            String complemento = usuario.getEndereco().getComplemento() != null ? usuario.getEndereco().getComplemento() : "";
+
+            if (!logradouro.isEmpty()) {
+                addressText = logradouro + (complemento.isEmpty() ? "" : " - " + complemento);
+            }
         }
 
-
+        // Retorna o DTO do Perfil montado para o Frontend React
         return new PerfilResponseDTO(
                 usuario.getNomeCompleto(),
                 nomePlano,
@@ -67,15 +73,13 @@ public class PerfilService {
                 usuario.getCpf(),
                 usuario.getTelefoneCelular(),
                 usuario.getDataNascimento(),
-                enderecoCompleto,
+                addressText,
                 pedidoDTO
         );
     }
 
-
     @Transactional
     public void atualizarDadosPerfil(String email, SalvarPerfilDTO dto) {
-
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -85,7 +89,6 @@ public class PerfilService {
         usuario.setDataNascimento(dto.dataNascimento());
         usuario.setCidadeEstado(dto.cidadeEstado());
 
-
         Endereco endereco = usuario.getEndereco();
         if (endereco == null) {
             endereco = new Endereco();
@@ -94,10 +97,7 @@ public class PerfilService {
         endereco.setLogradouro(dto.logradouro());
         endereco.setComplemento(dto.complemento());
 
-
         usuario.setEndereco(endereco);
-
-        // Salva o usuário no banco. o CascadeType.ALL configurado na Entidade Usuario salvará o endereço junto
         usuarioRepository.save(usuario);
     }
 }

@@ -1,45 +1,72 @@
 package com.sopro.project_demoday.service;
 
+import com.sopro.project_demoday.dto.CheckoutDTO;
 import com.sopro.project_demoday.model.Assinatura;
-import com.sopro.project_demoday.model.StatusAssinatura;
+import com.sopro.project_demoday.model.Pagamento;
+import com.sopro.project_demoday.model.Usuario;
 import com.sopro.project_demoday.repository.AssinaturaRepository;
+import com.sopro.project_demoday.repository.PagamentoRepository;
+import com.sopro.project_demoday.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AssinaturaService {
 
-    private final AssinaturaRepository assinaturaRepository;
+    @Autowired
+    private AssinaturaRepository assinaturaRepository;
 
-    // Injeção de dependência do repositório via construtor
-    public AssinaturaService(AssinaturaRepository assinaturaRepository) {
-        this.assinaturaRepository = assinaturaRepository;
+    @Autowired
+    private PagamentoRepository pagamentoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Transactional
+    public void processarCheckout(String email, CheckoutDTO dto) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+
+        Pagamento pagamento = new Pagamento(
+                usuario,
+                dto.valor(),
+                dto.formaPagamento(),
+                "PAGO", // Em produção, este status viria dinamicamente do webhook do gateway
+                dto.transactionId(),
+                LocalDateTime.now()
+        );
+        pagamentoRepository.save(pagamento);
+
+
+        Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
+                .orElse(new Assinatura());
+
+        assinatura.setUsuario(usuario);
+        assinatura.setPlano(dto.plano());
+        assinatura.setStatus("ATIVO");
+        assinatura.setDataInicio(LocalDateTime.now());
+
+
+        if ("MENSAL".equalsIgnoreCase(dto.plano())) {
+            assinatura.setDataExpiracao(LocalDateTime.now().plusMonths(1));
+        } else {
+            assinatura.setDataExpiracao(LocalDateTime.now().plusYears(1));
+        }
+
+        assinaturaRepository.save(assinatura);
     }
 
-    /**
-     * Verifica e atualiza o status com base na data de expiração.
-     */
-    public StatusAssinatura verificarEAtualizarStatus(Assinatura assinatura) {
-        LocalDate hoje = LocalDate.now();
+    public Assinatura obterAssinaturaPorEmail(String email) {
+        return assinaturaRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new RuntimeException("Nenhuma assinatura ativa encontrada para este usuário."));
+    }
 
-        // Se o status já for EXPIRADO, não precisa recalcular
-        if (assinatura.getStatus() == StatusAssinatura.EXPIRADO) {
-            return assinatura.getStatus();
-        }
-
-        // Se a data atual passou da data de expiração, atualiza para EXPIRADO
-        if (hoje.isAfter(assinatura.getExpiracao())) {
-            assinatura.setStatus(StatusAssinatura.EXPIRADO);
-            assinaturaRepository.save(assinatura);
-            return StatusAssinatura.EXPIRADO;
-        }
-
-        // Se está dentro do prazo e o status original é TRIAL, ele continua em TRIAL
-        if (assinatura.getStatus() == StatusAssinatura.TRIAL) {
-            return StatusAssinatura.TRIAL;
-        }
-
-        // Caso contrário (dentro do prazo e não é trial), está ATIVO
-        return StatusAssinatura.ATIVO;
+    public List<Pagamento> obterHistoricoPagamentos(String email) {
+        return pagamentoRepository.findByUsuarioEmail(email);
     }
 }

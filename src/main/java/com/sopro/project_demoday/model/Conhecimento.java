@@ -2,7 +2,7 @@ package com.sopro.project_demoday.model;
 
 import jakarta.persistence.*;
 
-@Table(name = "TB_CONHECIMENTO")
+@Table(name = "tb_conhecimento")
 @Entity
 public class Conhecimento {
 

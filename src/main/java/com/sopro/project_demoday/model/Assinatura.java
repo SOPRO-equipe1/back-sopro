@@ -1,62 +1,35 @@
 package com.sopro.project_demoday.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Table(name = "TB_ASSINATURA")
 @Entity
+@Table(name = "tb_assinatura")
 public class Assinatura {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusAssinatura status;
-
-    @Column(name = "data_inicio", nullable = false)
-    private LocalDate dataInicio;
-
-    @Column(name = "data_expericao", nullable = false) // Mantido o nome da coluna do seu banco
-    private LocalDate expiracao;
-
     @OneToOne
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    // Construtor Padrão
+    private String plano;
+    private String status;
+    private LocalDateTime dataInicio;
+    private LocalDateTime dataExpiracao;
+
+
     public Assinatura() {
     }
 
-    // Construtor Cheio
-    public Assinatura(StatusAssinatura status, LocalDate dataInicio, LocalDate expiracao, Usuario usuario) {
-        this.status = status;
-        this.dataInicio = dataInicio;
-        this.expiracao = expiracao;
-        this.usuario = usuario;
-    }
-
-    // Getters e Setters corrigidos
     public Long getId() {
         return id;
     }
 
-    public StatusAssinatura getStatus() {
-        return status;
-    }
-
-    public void setStatus(StatusAssinatura status) {
-        this.status = status;
-    }
-
-    public LocalDate getExpiracao() {
-        return expiracao;
-    }
-
-    // Corrigido de setExpiricao para setExpiracao para bater com o padrão Java Bean
-    public void setExpiracao(LocalDate expiracao) {
-        this.expiracao = expiracao;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Usuario getUsuario() {
@@ -67,11 +40,37 @@ public class Assinatura {
         this.usuario = usuario;
     }
 
-    public LocalDate getDataInicio() {
+    public String getPlano() {
+        return plano;
+    }
+
+    public void setPlano(String plano) {
+        this.plano = plano;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getDataInicio() {
         return dataInicio;
     }
 
-    public void setDataInicio(LocalDate dataInicio) {
+    public void setDataInicio(LocalDateTime dataInicio) {
         this.dataInicio = dataInicio;
     }
+
+    public LocalDateTime getDataExpiracao() {
+        return dataExpiracao;
+    }
+
+    public void setDataExpiracao(LocalDateTime dataExpiracao) {
+        this.dataExpiracao = dataExpiracao;
+    }
+
+    // Seus getters e setters...
 }
