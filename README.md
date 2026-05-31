@@ -37,7 +37,7 @@ Abaixo encontra-se a modelagem das entidades principais: `Usuario`, `Assinatura`
 
 ## DER
 
-![MER](docs/driagrams/sopro_modelagem_logica.png)
+![DER](docs/driagrams/modelo-logico.png)
 
 ## 🛠️ Stack tecnológica
 
