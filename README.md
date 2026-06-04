@@ -12,6 +12,10 @@
 
 O **SOPRO** é uma solução de tecnologia assistiva focada em devolver a autonomia de comunicação a indivíduos com mutismo ou limitações motoras severas. Esta API é o motor que gere a inteligência, a segurança e os dados por trás da plataforma, permitindo a conversão de inputs físicos em voz sintetizada e a gestão de perfis de utilizador.
 
+```Se quiser ver uma documentação mais detalhada sobre a arquitetura:```
+
+[![GitBook](https://img.shields.io/badge/GITBOOK-000?style=for-the-badge&logoColor=FFF&color=000)](https://app.gitbook.com/invite/3BzJD9kc8XUB2pCNxAEC/kKoTDjNlltVAsoU7THWY)
+
 
 
 ## 📌 Funcionalidades principais
