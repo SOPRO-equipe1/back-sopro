@@ -34,11 +34,14 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado");
         }
 
-
         Usuario usuario = new Usuario();
-        usuario.setNomeCompleto(dto.getNome());
         usuario.setEmail(dto.getEmail());
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
+
+        if (dto.getNome() != null) {
+            usuario.setNomeCompleto(dto.getNome());
+        }
 
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
 

@@ -35,14 +35,14 @@ public class ConhecimentoService {
         }
 
         if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
-            return "Erro: A chave GEMINI_API_KEY não foi configurada no arquivo .env.";
+            return "Erro: A chave GEMINI_API_KEY não foi configurada no arquivo application.properties ou no ambiente.";
         }
 
-        //  Coleta a base de dados reais do projeto
+        // 1. Coleta a base de dados reais do projeto para alimentar o RAG
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        //  Prompt
+        // 2. Engenharia de Prompt: Define a persona do Soprinho e injeta os dados do MySQL
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
                 "Seu papel é auxiliar pessoas com limitações motoras ou de fala, além de seus familiares, com respostas empáticas, claras e extremamente precisas.\n\n" +
                 "DIRETRIZES DE SEGURANÇA E CONTEXTO:\n" +
@@ -53,27 +53,23 @@ public class ConhecimentoService {
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
                 "Mensagem enviada pelo usuário: " + mensagemUsuario;
 
-        // Montagem pedidada pela API do Gemini
+        // 3. Montagem do Payload estruturado exigido pela API do Gemini
         Map<String, Object> textPart = Map.of("text", promptSistema);
-        Map<String, Object> parts = Map.of("parts", List.of(textPart));
-
-
         Map<String, Object> contentObject = Map.of(
                 "role", "user",
                 "parts", List.of(textPart)
         );
 
-
         Map<String, Object> generationConfig = new HashMap<>();
         generationConfig.put("temperature", 0.2);
-        generationConfig.put("maxOutputTokens", 800);
-
+        generationConfig.put("maxOutputTokens", 2000);
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
         corpoRequisicao.put("contents", List.of(contentObject));
         corpoRequisicao.put("generationConfig", generationConfig);
 
         try {
+
             Map<?, ?> respostaRaw = restClient.post()
                     .uri(apiUrl + "?key=" + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -82,9 +78,32 @@ public class ConhecimentoService {
                     .body(Map.class);
 
             return extrairTextoDoGemini(respostaRaw);
+
         } catch (Exception e) {
-            return "O motor do chatbot falhou a conectar com a inteligência do Gemini: " + e.getMessage();
+
+            System.err.println("⚠️ Alerta SOPRO: Instabilidade detectada na API externa. Acionando base local... Erro: " + e.getMessage());
+            return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
+    }
+
+    private String gerarRespostaDeContingenciaLocal(List<Conhecimento> base, String perguntaUsuario) {
+        String perguntaMin = perguntaUsuario.toLowerCase();
+
+
+        List<Conhecimento> correspondencias = base.stream()
+                .filter(c -> perguntaMin.contains(c.getTitulo().toLowerCase()) ||
+                        (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
+                .collect(Collectors.toList());
+
+        if (!correspondencias.isEmpty()) {
+            Conhecimento dadosLocais = correspondencias.get(0);
+            return "Olá! O Soprinho está operando em modo de contingência local devido à alta demanda nos nossos servidores centrais. " +
+                    "Com base nas especificações do projeto: " + dadosLocais.getConteudo();
+        }
+
+
+        return "Olá! O Soprinho está operando em modo de segurança local no momento devido a uma instabilidade temporária nos servidores da nuvem. " +
+                "Para que eu possa te ajudar com precisão, tente utilizar palavras-chave simplificadas como 'sensor', 'dispositivo' ou 'plano'.";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
@@ -132,8 +151,8 @@ public class ConhecimentoService {
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar a resposta do motor de IA.";
+            return "Erro ao processar a estrutura de resposta do motor de IA.";
         }
-        return "O Gemini não conseguiu gerar uma resposta válida.";
+        return "O Gemini não conseguiu gerar uma resposta estruturada válida.";
     }
 }

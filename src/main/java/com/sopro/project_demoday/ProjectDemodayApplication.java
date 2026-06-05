@@ -11,7 +11,7 @@ import java.util.List;
 public class ProjectDemodayApplication {
 
 	public static void main(String[] args) {
-		// Lê o arquivo .env e força a gravação correta de todas as variáveis na memória do sistema
+
 		carregarVariaveisAmbiente();
 		SpringApplication.run(ProjectDemodayApplication.class, args);
 	}

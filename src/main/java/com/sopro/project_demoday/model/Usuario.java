@@ -1,67 +1,69 @@
 package com.sopro.project_demoday.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sopro.project_demoday.model.enums.RoleUsuario;
+import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import jakarta.persistence.*;
-import com.sopro.project_demoday.model.enums.RoleUsuario;
+
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
 @Entity
 @Table(name = "tb_usuario")
-public class Usuario implements UserDetails { // <-- Adicione o implements UserDetails aqui!
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Email e senha são os únicos obrigatórios no primeiro momento (Cadastro)
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "nome_completo", nullable = false)
+    @Column(nullable = false)
+    private String senha;
+
+    // Campos do Perfil que começam vazios (nullable = true) e são preenchidos depois
+    @Column(name = "nome_completo", nullable = true)
     private String nomeCompleto;
 
-    @Column(nullable = false, unique = true, length = 14)
+    @Column(nullable = true, unique = true, length = 14)
     private String cpf;
 
-    @Column(name = "telefone_celular", nullable = false, length = 15)
+    @Column(name = "telefone_celular", nullable = true, length = 15)
     private String telefoneCelular;
 
-    @Column(name = "data_nascimento", nullable = false)
+    @Column(name = "data_nascimento", nullable = true)
     private LocalDate dataNascimento;
 
-    @Column(name = "cidade_estado", nullable = false)
+    @Column(name = "cidade_estado", nullable = true)
     private String cidadeEstado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoleUsuario role = RoleUsuario.USUARIO;
+
+    // Relacionamento com Endereço (Preenchido na tela de Perfil)
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private Endereco endereco;
 
+    // Relacionamento com Assinatura (Controlado pelo botão de assinar)
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Assinatura assinatura;
-
-    private String senha; // Campo necessário para a autenticação
 
     public Usuario() {
     }
 
-    public Usuario(String email, String nomeCompleto, String cpf, String telefoneCelular, LocalDate dataNascimento, String cityState, Endereco endereco) {
-        this.email = email;
-        this.nomeCompleto = nomeCompleto;
-        this.cpf = cpf;
-        this.telefoneCelular = telefoneCelular;
-        this.dataNascimento = dataNascimento;
-        this.cidadeEstado = cityState;
-        this.endereco = endereco;
-    }
-
-
+    // Métodos do UserDetails (Security)
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
-        return List.of(new SimpleGrantedAuthority("ROLE_USUARIO"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -75,100 +77,48 @@ public class Usuario implements UserDetails { // <-- Adicione o implements UserD
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 
+    // Getters e Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNomeCompleto() { return nomeCompleto; }
+    public void setNomeCompleto(String nomeCompleto) { this.nomeCompleto = nomeCompleto; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getCpf() { return cpf; }
+    public void setCpf(String cpf) { this.cpf = cpf; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getTelefoneCelular() { return telefoneCelular; }
+    public void setTelefoneCelular(String telefoneCelular) { this.telefoneCelular = telefoneCelular; }
 
-    public String getNomeCompleto() {
-        return nomeCompleto;
-    }
+    public LocalDate getDataNascimento() { return dataNascimento; }
+    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
 
-    public void setNomeCompleto(String nomeCompleto) {
-        this.nomeCompleto = nomeCompleto;
-    }
+    public String getCidadeEstado() { return cidadeEstado; }
+    public void setCidadeEstado(String cidadeEstado) { this.cidadeEstado = cidadeEstado; }
 
-    public String getCpf() {
-        return cpf;
-    }
+    public RoleUsuario getRole() { return role; }
+    public void setRole(RoleUsuario role) { this.role = role; }
 
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
+    public Endereco getEndereco() { return endereco; }
+    public void setEndereco(Endereco endereco) { this.endereco = endereco; }
 
-    public String getTelefoneCelular() {
-        return telefoneCelular;
-    }
-
-    public void setTelefoneCelular(String telefoneCelular) {
-        this.telefoneCelular = telefoneCelular;
-    }
-
-    public LocalDate getDataNascimento() {
-        return dataNascimento;
-    }
-
-    public void setDataNascimento(LocalDate dataNascimento) {
-        this.dataNascimento = dataNascimento;
-    }
-
-    public String getCidadeEstado() {
-        return cidadeEstado;
-    }
-
-    public void setCidadeEstado(String cidadeEstado) {
-        this.cidadeEstado = cidadeEstado;
-    }
-
-    public Endereco getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(Endereco endereco) {
-        this.endereco = endereco;
-    }
-
-    public Assinatura getAssinatura() {
-        return assinatura;
-    }
-
-    public void setAssinatura(Assinatura assinatura) {
-        this.assinatura = assinatura;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
+    public Assinatura getAssinatura() { return assinatura; }
+    public void setAssinatura(Assinatura signature) { this.assinatura = signature; }
 }

@@ -16,7 +16,6 @@ public class PerfilService {
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
 
-    // Construtor manual para Injeção de Dependência
     public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
@@ -31,7 +30,7 @@ public class PerfilService {
         Pedido ultimoPedido = pedidoRepository.findFirstByUsuarioEmailOrderByIdDesc(email)
                 .orElse(null);
 
-        // Estrutura o DTO interno do pedido caso ele exista
+        // CORREÇÃO: Instancia o DTO interno aninhado esperado pelo PerfilResponseDTO
         PerfilResponseDTO.UltimoPedidoDTO pedidoDTO = null;
         if (ultimoPedido != null) {
             pedidoDTO = new PerfilResponseDTO.UltimoPedidoDTO(
@@ -44,15 +43,12 @@ public class PerfilService {
             );
         }
 
-
         String nomePlano = "Plano Free";
         if (usuario.getAssinatura() != null && usuario.getAssinatura().getStatus() != null) {
-
-            if ("ATIVO".equalsIgnoreCase(usuario.getAssinatura().getStatus().toString())) {
+            if ("ATIVO".equalsIgnoreCase(usuario.getAssinatura().getStatus())) {
                 nomePlano = "Plano Premium";
             }
         }
-
 
         String addressText = "Endereço não preenchido";
         if (usuario.getEndereco() != null) {
@@ -64,7 +60,7 @@ public class PerfilService {
             }
         }
 
-        // Retorna o DTO do Perfil montado para o Frontend React
+        // Retorna o DTO do Perfil com todos os tipos perfeitamente alinhados
         return new PerfilResponseDTO(
                 usuario.getNomeCompleto(),
                 nomePlano,
@@ -74,12 +70,13 @@ public class PerfilService {
                 usuario.getTelefoneCelular(),
                 usuario.getDataNascimento(),
                 addressText,
-                pedidoDTO
+                pedidoDTO // <-- Tipo corrigido de String para UltimoPedidoDTO!
         );
     }
 
+    // BOTÃO 1: Salva estritamente as Informações Pessoais do Usuário
     @Transactional
-    public void atualizarDadosPerfil(String email, SalvarPerfilDTO dto) {
+    public void atualizarDadosPessoais(String email, SalvarPerfilDTO dto) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -89,6 +86,15 @@ public class PerfilService {
         usuario.setDataNascimento(dto.dataNascimento());
         usuario.setCidadeEstado(dto.cidadeEstado());
 
+        usuarioRepository.save(usuario);
+    }
+
+
+    @Transactional
+    public void atualizarEndereco(String email, SalvarPerfilDTO dto) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
         Endereco endereco = usuario.getEndereco();
         if (endereco == null) {
             endereco = new Endereco();
@@ -96,6 +102,13 @@ public class PerfilService {
 
         endereco.setLogradouro(dto.logradouro());
         endereco.setComplemento(dto.complemento());
+
+        // Preenche valores padrão para os campos obrigatórios (NOT NULL) do seu Endereco.java
+        if (endereco.getCep() == null) endereco.setCep("00000-000");
+        if (endereco.getNumero() == null) endereco.setNumero("S/N");
+        if (endereco.getBairro() == null) endereco.setBairro("Bairro");
+        if (endereco.getCidade() == null) endereco.setCidade(usuario.getCidadeEstado() != null ? usuario.getCidadeEstado() : "Cidade");
+        if (endereco.getEstado() == null) endereco.setEstado("SP");
 
         usuario.setEndereco(endereco);
         usuarioRepository.save(usuario);
