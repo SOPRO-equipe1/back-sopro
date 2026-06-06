@@ -5,6 +5,8 @@ import com.sopro.project_demoday.dto.UsuarioAtualizacaoDTO;
 import com.sopro.project_demoday.dto.UsuarioRespostaDTO;
 import com.sopro.project_demoday.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,45 +18,80 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class UsuarioController {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class.getName());
+
     @Autowired
     private UsuarioService usuarioService;
-    
+
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioRespostaDTO> cadastrar(@Valid @RequestBody UsuarioCadastroDTO dto) {
-        UsuarioRespostaDTO response = usuarioService.cadastrar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            UsuarioRespostaDTO response = usuarioService.cadastrar(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            logger.error("Erro ao realizar o cadastro de novo usuário no sistema.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioRespostaDTO> buscarPorId(@PathVariable Long id) {
-        UsuarioRespostaDTO response = usuarioService.buscarPorId(id);
-        return ResponseEntity.ok(response);
+        try {
+            UsuarioRespostaDTO response = usuarioService.buscarPorId(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar informações do usuário pelo ID informado.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioRespostaDTO>> listarTodos() {
-        List<UsuarioRespostaDTO> response = usuarioService.listarTodos();
-        return ResponseEntity.ok(response);
+        try {
+            List<UsuarioRespostaDTO> response = usuarioService.listarTodos();
+            if (response.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Falha ao listar todos os usuários cadastrados na base de dados.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioRespostaDTO> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioAtualizacaoDTO dto) {
-        UsuarioRespostaDTO response = usuarioService.atualizar(id, dto);
-        return ResponseEntity.ok(response);
+        try {
+            UsuarioRespostaDTO response = usuarioService.atualizar(id, dto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao tentar atualizar as informações cadastrais do usuário.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    
+
     @DeleteMapping("/{id}/desativar")
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
-        usuarioService.desativar(id);
-        return ResponseEntity.noContent().build();
+        try {
+            usuarioService.desativar(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Erro ao processar a desativação lógica da conta do usuário.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        usuarioService.excluir(id);
-        return ResponseEntity.noContent().build();
+        try {
+            usuarioService.excluir(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Falha grave na exclusão física do registro de usuário do sistema.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
