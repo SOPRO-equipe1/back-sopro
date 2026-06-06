@@ -51,6 +51,8 @@ Abaixo encontra-se a modelagem das entidades principais: `Usuario`, `Assinatura`
  **Banco de Dados:** MySQL.
  **Segurança:** Spring Security & OAuth2.
 
+ </div>
+
 ## Como Executar o projeto
 
 ### 1. Pré-requisitos
@@ -70,3 +72,6 @@ DB_NAME=sopro_db
 DB_USER=root
 DB_PASSWORD=suasenha
 
+```
+
+<div align= "center"> Criado com 💙 pela equipe do Back-end. </div>
