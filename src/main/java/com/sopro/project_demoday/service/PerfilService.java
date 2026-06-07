@@ -22,15 +22,15 @@ public class PerfilService {
     }
 
     public PerfilResponseDTO obterPerfilPorEmail(String email) {
-        // 1. Busca o usuário pelo e-mail
+        //  Busca o usuário pelo e-mail
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // 2. Busca o último pedido realizado por este usuário
+        //  Busca o último pedido realizado por este usuário
         Pedido ultimoPedido = pedidoRepository.findFirstByUsuarioEmailOrderByIdDesc(email)
                 .orElse(null);
 
-        // CORREÇÃO: Instancia o DTO interno aninhado esperado pelo PerfilResponseDTO
+
         PerfilResponseDTO.UltimoPedidoDTO pedidoDTO = null;
         if (ultimoPedido != null) {
             pedidoDTO = new PerfilResponseDTO.UltimoPedidoDTO(
@@ -70,7 +70,7 @@ public class PerfilService {
                 usuario.getTelefoneCelular(),
                 usuario.getDataNascimento(),
                 addressText,
-                pedidoDTO // <-- Tipo corrigido de String para UltimoPedidoDTO!
+                pedidoDTO
         );
     }
 
