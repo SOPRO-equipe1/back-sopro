@@ -100,15 +100,13 @@ public class PerfilService {
             endereco = new Endereco();
         }
 
-        endereco.setLogradouro(dto.logradouro());
-        endereco.setComplemento(dto.complemento());
 
-        // Preenche valores padrão para os campos obrigatórios (NOT NULL) do seu Endereco.java
-        if (endereco.getCep() == null) endereco.setCep("00000-000");
-        if (endereco.getNumero() == null) endereco.setNumero("S/N");
-        if (endereco.getBairro() == null) endereco.setBairro("Bairro");
-        if (endereco.getCidade() == null) endereco.setCidade(usuario.getCidadeEstado() != null ? usuario.getCidadeEstado() : "Cidade");
-        if (endereco.getEstado() == null) endereco.setEstado("SP");
+        endereco.setCep(dto.cep() != null ? dto.cep() : "00000-000");
+        endereco.setNumero(dto.numero() != null ? dto.numero() : "S/N");
+        endereco.setComplemento(dto.complemento());
+        endereco.setBairro(dto.bairro() != null ? dto.bairro() : "Bairro");
+        endereco.setCidade(dto.cidade() != null ? dto.cidade() : "Cidade");
+        endereco.setEstado(dto.estado() != null ? dto.estado() : "SP");
 
         usuario.setEndereco(endereco);
         usuarioRepository.save(usuario);
