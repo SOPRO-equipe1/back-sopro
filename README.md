@@ -32,68 +32,67 @@ O projeto segue o padrão **MVC** (Model-View-Controller) para garantir a separa
 
 ```mermaid
 graph TD
-    %% Estilos Gerais com Cores Vibrantes (Estética do Contraste)
-    classDef client fill:#37474F,stroke:#00E5FF,stroke-width:2px,color:#fff;
-    classDef security fill:#1A237E,stroke:#7C4DFF,stroke-width:2px,color:#fff;
-    classDef controller fill:#1B5E20,stroke:#00E676,stroke-width:2px,color:#fff;
-    classDef service fill:#B71C1C,stroke:#FF1744,stroke-width:2px,color:#fff;
-    classDef repository fill:#F57F17,stroke:#FFEA00,stroke-width:2px,color:#fff;
-    classDef database fill:#006064,stroke:#00E5FF,stroke-width:2px,color:#fff;
-    classDef external fill:#4A148C,stroke:#E040FB,stroke-width:2px,color:#fff;
+    %% Definição de Estilos Avançados
+    classDef azul fill:#1A53FF,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef roxo fill:#9333EA,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef verde fill:#30BD30,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
+    classDef laranja fill:#F97316,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
+    classDef preto fill:#1D252A,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef branco fill:#FAFCFF,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
 
-    %% Client Layer
-    subgraph Client_Layer ["Camada Cliente"]
-        A[React Frontend / App Mobile]:::client
+    %% Camada Cliente
+    subgraph Camada_Cliente ["Camada Cliente"]
+        A[React Frontend / App Mobile]:::azul
     end
 
-    %% Security & Infrastructure Layer
-    subgraph Inf_Layer ["Segurança & Infraestrutura (Spring Security)"]
-        B[JwtAuthenticationFilter]:::security
-        C[SecurityConfig / Endpoints]:::security
+    %% Segurança & Infraestrutura
+    subgraph Camada_Seguranca ["Segurança & Infraestrutura"]
+        B[JwtAuthenticationFilter]:::roxo
+        C[SecurityConfig / Endpoints]:::roxo
     end
 
-    %% Controller Layer (REST Endpoints)
-    subgraph Controller_Layer ["Controllers (MVC - HTTP REST)"]
-        D[AuthController]:::controller
-        E[UsuarioController]:::controller
-        F[PerfilController]:::controller
-        G[AssinaturaController]:::controller
-        H[PreferenciasController]:::controller
-        I[ConhecimentoController]:::controller
+    %% Controllers
+    subgraph Camada_Controllers ["Controllers (MVC - REST)"]
+        D[AuthController]:::verde
+        E[UsuarioController]:::verde
+        F[PerfilController]:::verde
+        G[AssinaturaController]:::verde
+        H[PreferenciasController]:::verde
+        I[ConhecimentoController]:::verde
     end
 
-    %% Service Layer (Business Logic)
-    subgraph Service_Layer ["Services (Regras de Negócio)"]
-        J[AuthService]:::service
-        K[UsuarioService]:::service
-        L[PerfilService]:::service
-        M[AssinaturaService]:::service
-        N[PreferenciasService]:::service
-        O[ConhecimentoService]:::service
+    %% Services
+    subgraph Camada_Services ["Services (Regras de Negócio)"]
+        J[AuthService]:::laranja
+        K[UsuarioService]:::laranja
+        L[PerfilService]:::laranja
+        M[AssinaturaService]:::laranja
+        N[PreferenciasService]:::laranja
+        O[ConhecimentoService]:::laranja
     end
 
-    %% Repository Layer (Data Access)
-    subgraph Repository_Layer ["Repositories (Spring Data JPA)"]
-        P[UsuarioRepository]:::repository
-        Q[PedidoRepository]:::repository
-        R[AssinaturaRepository]:::repository
-        S[PagamentoRepository]:::repository
-        T[PreferenciasAcessibilidadeRepository]:::repository
-        U[ConhecimentoRepository]:::repository
+    %% Repositories
+    subgraph Camada_Repositories ["Repositories (Data Access)"]
+        P[UsuarioRepository]:::preto
+        Q[PedidoRepository]:::preto
+        R[AssinaturaRepository]:::preto
+        S[PagamentoRepository]:::preto
+        T[PreferenciasAcessibilidadeRepository]:::preto
+        U[ConhecimentoRepository]:::preto
     end
 
-    %% Database & External Engines
-    subgraph Storage_Layer ["Persistência & Serviços Externos"]
-        V[(MySQL / PostgreSQL)]:::database
-        W[Google Gemini API]:::external
+    %% Persistência & Motores Externos
+    subgraph Camada_Externos ["Persistência & Motores Externos"]
+        V[(MySQL / PostgreSQL)]:::branco
+        W[Google Gemini API]:::branco
     end
 
     %% Fluxo de Conexões e Requisições
-    A -->|1. Envia Requisição HTTP + JWT| B
+    A -->|1. Requisição HTTP + JWT| B
     B -->|2. Valida Token| C
-    C -->|3. Redireciona para o Endpoints| D & E & F & G & H & I
+    C -->|3. Encaminha Requisição| D & E & F & G & H & I
     
-    %% Vinculação Controller -> Service
+    %% Controller -> Service
     D --> J
     E --> K
     F --> L
@@ -101,7 +100,7 @@ graph TD
     H --> N
     I --> O
 
-    %% Vinculação Service -> Repository / External
+    %% Service -> Repository / API
     J --> P
     K --> P & T
     L --> P & Q
@@ -110,9 +109,8 @@ graph TD
     O -->|Busca dados para o RAG| U
     O -->|Injeta Contexto / Prompt| W
 
-    %% Vinculação Repository -> Database
+    %% Repository -> Banco de Dados
     P & Q & R & S & T & U --> V
-
 ```
   
 
