@@ -29,13 +29,90 @@ O **SOPRO** é uma solução de tecnologia assistiva focada em devolver a autono
 
 O projeto segue o padrão **MVC** (Model-View-Controller) para garantir a separação de responsabilidades e a escalabilidade do sistema.
 
-### Diagrama de Classes (UML)
-Abaixo encontra-se a modelagem das entidades principais: `Usuario`, `Assinatura` e `Conhecimento`.
 
+```mermaid
+graph TD
+    %% Definição de Estilos Avançados
+    classDef azul fill:#1A53FF,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef roxo fill:#9333EA,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef verde fill:#30BD30,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
+    classDef laranja fill:#F97316,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
+    classDef preto fill:#1D252A,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
+    classDef branco fill:#FAFCFF,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
 
+    %% Camada Cliente
+    subgraph Camada_Cliente ["Camada Cliente"]
+        A[React Frontend / App Mobile]:::azul
+    end
 
+    %% Segurança & Infraestrutura
+    subgraph Camada_Seguranca ["Segurança & Infraestrutura"]
+        B[JwtAuthenticationFilter]:::roxo
+        C[SecurityConfig / Endpoints]:::roxo
+    end
 
-  ![UML](docs/driagrams/Sopro-backUML.jpg)
+    %% Controllers
+    subgraph Camada_Controllers ["Controllers (MVC - REST)"]
+        D[AuthController]:::verde
+        E[UsuarioController]:::verde
+        F[PerfilController]:::verde
+        G[AssinaturaController]:::verde
+        H[PreferenciasController]:::verde
+        I[ConhecimentoController]:::verde
+    end
+
+    %% Services
+    subgraph Camada_Services ["Services (Regras de Negócio)"]
+        J[AuthService]:::laranja
+        K[UsuarioService]:::laranja
+        L[PerfilService]:::laranja
+        M[AssinaturaService]:::laranja
+        N[PreferenciasService]:::laranja
+        O[ConhecimentoService]:::laranja
+    end
+
+    %% Repositories
+    subgraph Camada_Repositories ["Repositories (Data Access)"]
+        P[UsuarioRepository]:::preto
+        Q[PedidoRepository]:::preto
+        R[AssinaturaRepository]:::preto
+        S[PagamentoRepository]:::preto
+        T[PreferenciasAcessibilidadeRepository]:::preto
+        U[ConhecimentoRepository]:::preto
+    end
+
+    %% Persistência & Motores Externos
+    subgraph Camada_Externos ["Persistência & Motores Externos"]
+        V[(MySQL / PostgreSQL)]:::branco
+        W[Google Gemini API]:::branco
+    end
+
+    %% Fluxo de Conexões e Requisições
+    A -->|1. Requisição HTTP + JWT| B
+    B -->|2. Valida Token| C
+    C -->|3. Encaminha Requisição| D & E & F & G & H & I
+    
+    %% Controller -> Service
+    D --> J
+    E --> K
+    F --> L
+    G --> M
+    H --> N
+    I --> O
+
+    %% Service -> Repository / API
+    J --> P
+    K --> P & T
+    L --> P & Q
+    M --> P & R & S
+    N --> P & T
+    O -->|Busca dados para o RAG| U
+    O -->|Injeta Contexto / Prompt| W
+
+    %% Repository -> Banco de Dados
+    P & Q & R & S & T & U --> V
+```
+  
 
 
 
