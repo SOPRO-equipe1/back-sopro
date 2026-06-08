@@ -8,7 +8,8 @@ public class ErrorResponseDTO {
     private int status;
     private String erro;
     private String mensagem;
-    
+
+
     public ErrorResponseDTO() {
     }
     
