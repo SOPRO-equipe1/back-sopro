@@ -13,7 +13,7 @@ public record CheckoutDTO(
         String produtoDescricao,
 
         // Dados financeiros gerais
-        BigDecimal valorTotal,
+        BigDecimal valor,
         String formaPagamento,
         String transactionId,
 
