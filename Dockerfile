@@ -10,4 +10,4 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar sopro-api.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "sopro-api.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "sopro-api.jar"]
