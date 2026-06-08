@@ -63,30 +63,34 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        // ROTAS PÚBLICAS DO SWAGGER
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-
+                        //  ROTAS PÚBLICAS DA API
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
+
+
                         .requestMatchers("/api/chatbot/**").permitAll()
-                        .requestMatchers("/api/perfil/**").permitAll()
+                        .requestMatchers("/api/soprinho/**").permitAll()
                         .requestMatchers("/api/conhecimento/**").permitAll()
-                        .requestMatchers("/api/assinaturas/**").permitAll() // Liberado para os testes de Checkout
-                        // REGRAS DE ADMINISTRADOR
+                        .requestMatchers("/api/assinaturas/**").permitAll()
+
+
+                        .requestMatchers("/api/perfil/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("ADMIN")
 
+                        // Qualquer outra requisição exige login
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
