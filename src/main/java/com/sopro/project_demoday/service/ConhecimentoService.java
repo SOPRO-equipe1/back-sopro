@@ -15,10 +15,9 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    // Endereço oficial de Chat Completions da OpenAI
-    private final String apiUrl = "https://api.openai.com/v1/chat/completions";
+    private final String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
-    @Value("${openai.api.key:}")
+    @Value("${GEMINI_API_KEY:}")
     private String apiKey;
 
     @Autowired
@@ -36,70 +35,61 @@ public class ConhecimentoService {
         }
 
         if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
-            return "Erro: A chave OPENAI_API_KEY não foi configurada no arquivo application.properties ou no ambiente.";
+            return "Erro: A chave GEMINI_API_KEY não foi configurada no arquivo .env.";
         }
 
-
+        //  Coleta a base de dados reais do projeto
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-
-        String instrucaoSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
+        //  Prompt
+        String promptSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
                 "Seu papel é auxiliar pessoas com limitações motoras ou de fala, além de seus familiares, com respostas empáticas, claras e extremamente precisas.\n\n" +
                 "DIRETRIZES DE SEGURANÇA E CONTEXTO:\n" +
                 "1. Baseie sua resposta prioritariamente nos fatos reais do projeto listados abaixo.\n" +
                 "2. Se a informação necessária não estiver presente nos dados reais fornecidos abaixo, responda cordialmente explicando que o projeto está em constante evolução e que você ainda não possui esse detalhe específico, evitando inventar características técnicas ou comerciais não existentes.\n" +
                 "3. Nunca mencione termos técnicos internos como 'banco de dados', 'JSON' ou 'SQL' para o usuário final.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
-                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
+                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
+                "Mensagem enviada pelo usuário: " + mensagemUsuario;
+
+        // Montagem pedidada pela API do Gemini
+        Map<String, Object> textPart = Map.of("text", promptSistema);
+        Map<String, Object> parts = Map.of("parts", List.of(textPart));
 
 
-        Map<String, String> messageSystem = Map.of("role", "system", "content", instrucaoSistema);
-        Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
+        Map<String, Object> contentObject = Map.of(
+                "role", "user",
+                "parts", List.of(textPart)
+        );
+
+
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("temperature", 0.2);
+        generationConfig.put("maxOutputTokens", 800);
+
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
-        corpoRequisicao.put("model", "gpt-3.5-turbo");
-        corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
-        corpoRequisicao.put("temperature", 0.2);
+        corpoRequisicao.put("contents", List.of(contentObject));
+        corpoRequisicao.put("generationConfig", generationConfig);
 
         try {
-            // Disparo com cabeçalho de autorização Bearer exigido pela OpenAI
             Map<?, ?> respostaRaw = restClient.post()
-                    .uri(apiUrl)
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri(apiUrl + "?key=" + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(corpoRequisicao)
                     .retrieve()
                     .body(Map.class);
 
-            return extrairTextoDoGpt(respostaRaw);
-
+            return extrairTextoDoGemini(respostaRaw);
         } catch (Exception e) {
-            System.err.println("⚠️ Alerta SOPRO: Instabilidade detectada na API externa. Acionando base local... Erro: " + e.getMessage());
-            return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
+            return "O motor do chatbot falhou a conectar com a inteligência do Gemini: " + e.getMessage();
         }
-    }
-
-    private String gerarRespostaDeContingenciaLocal(List<Conhecimento> base, String perguntaUsuario) {
-        String perguntaMin = perguntaUsuario.toLowerCase();
-
-        List<Conhecimento> correspondencias = base.stream()
-                .filter(c -> perguntaMin.contains(c.getTitulo().toLowerCase()) ||
-                        (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
-                .collect(Collectors.toList());
-
-        if (!correspondencias.isEmpty()) {
-            Conhecimento dadosLocais = correspondencias.get(0);
-            return "Olá! O Soprinho está operando em modo de contingência local devido à alta demanda nos nossos servidores centrais. " +
-                    "Com base nas especificações do projeto: " + dadosLocais.getConteudo();
-        }
-
-        return "Olá! O Soprinho está operando em modo de segurança local no momento devido a uma instabilidade temporária nos servidores da nuvem. " +
-                "Para que eu possa te ajudar com precisão, tente utilizar palavras-chave simplificadas como 'sensor', 'dispositivo' ou 'plano'.";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
         String perguntaMin = pergunta.toLowerCase();
+
         List<Conhecimento> filtrados = base.stream()
                 .filter(c -> perguntaMin.contains(c.getTitulo().toLowerCase()) ||
                         (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
@@ -123,21 +113,27 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoGpt(Map<?, ?> respostaRaw) {
+    private String extrairTextoDoGemini(Map<?, ?> respostaRaw) {
         try {
-            if (respostaRaw != null && respostaRaw.containsKey("choices")) {
-                List<?> choices = (List<?>) respostaRaw.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<?, ?> firstChoice = (Map<?, ?>) choices.get(0);
-                    Map<?, ?> message = (Map<?, ?>) firstChoice.get("message");
-                    if (message != null && message.containsKey("content")) {
-                        return (String) message.get("content");
+            if (respostaRaw != null && respostaRaw.containsKey("candidates")) {
+                List<?> candidates = (List<?>) respostaRaw.get("candidates");
+                if (!candidates.isEmpty()) {
+                    Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
+                    Map<?, ?> content = (Map<?, ?>) firstCandidate.get("content");
+                    if (content != null && content.containsKey("parts")) {
+                        List<?> parts = (List<?>) content.get("parts");
+                        if (!parts.isEmpty()) {
+                            Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
+                            if (firstPart.containsKey("text")) {
+                                return (String) firstPart.get("text");
+                            }
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar a estrutura de resposta do motor GPT.";
+            return "Erro ao processar a resposta do motor de IA.";
         }
-        return "A OpenAI não conseguiu gerar uma resposta estruturada válida.";
+        return "O Gemini não conseguiu gerar uma resposta válida.";
     }
 }
