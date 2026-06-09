@@ -14,7 +14,7 @@ O **SOPRO** é uma solução de tecnologia assistiva focada em devolver a autono
 
 ```Se quiser ver uma documentação mais detalhada sobre a arquitetura:```
 
-[![GitBook](https://img.shields.io/badge/GITBOOK-000?style=for-the-badge&logoColor=FFF&color=000)](https://app.gitbook.com/invite/3BzJD9kc8XUB2pCNxAEC/kKoTDjNlltVAsoU7THWY)
+[![GitBook](https://img.shields.io/badge/GITBOOK-000?style=for-the-badge&logoColor=FFF&color=000)](https://app.gitbook.com/o/3BzJD9kc8XUB2pCNxAEC/s/jGShUQkZLDYVFAp0pbGV/)
 
 
 
