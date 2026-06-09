@@ -17,7 +17,7 @@ public class ConhecimentoService {
 
     private final String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
-    @Value("${GEMINI_API_KEY:}")
+    @Value("${gemini.api.key:}")
     private String apiKey;
 
     @Autowired
@@ -38,11 +38,11 @@ public class ConhecimentoService {
             return "Erro: A chave GEMINI_API_KEY não foi configurada no arquivo application.properties ou no ambiente.";
         }
 
-        // 1. Coleta a base de dados reais do projeto para alimentar o RAG
+        //  Coleta a base de dados reais do projeto para alimentar o RAG
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        // 2. Engenharia de Prompt: Define a persona do Soprinho e injeta os dados do MySQL
+        // Engenharia de Prompt: Define a persona do Soprinho e injeta os dados do MySQL
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
                 "Seu papel é auxiliar pessoas com limitações motoras ou de fala, além de seus familiares, com respostas empáticas, claras e extremamente precisas.\n\n" +
                 "DIRETRIZES DE SEGURANÇA E CONTEXTO:\n" +
@@ -53,7 +53,7 @@ public class ConhecimentoService {
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
                 "Mensagem enviada pelo usuário: " + mensagemUsuario;
 
-        // 3. Montagem do Payload estruturado exigido pela API do Gemini
+        //  Montagem do Payload estruturado exigido pela API do Gemini
         Map<String, Object> textPart = Map.of("text", promptSistema);
         Map<String, Object> contentObject = Map.of(
                 "role", "user",
