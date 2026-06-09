@@ -29,10 +29,10 @@ public class Pagamento {
     @Column(name = "data_pagamento")
     private LocalDateTime dataPagamento;
 
-    //  Construtor Padrão Vazio (Obrigatório para o JPA)
+
     public Pagamento() {}
 
-    //  Construtor Completo Utilizado no Service (Essencial para compilar!)
+
     public Pagamento(Usuario usuario, BigDecimal valor, String formaPagamento, String status, String transactionId, LocalDateTime dataPagamento) {
         this.usuario = usuario;
         this.valor = valor;
