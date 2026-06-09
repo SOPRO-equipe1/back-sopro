@@ -72,9 +72,12 @@ public class SecurityConfig {
                         // ROTAS PÚBLICAS DO SWAGGER
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        //  ROTAS PÚBLICAS DA API
+
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
+
+
+                        .requestMatchers(HttpMethod.POST, "/api/conhecimento/chat").permitAll()
 
 
                         .requestMatchers("/api/chatbot/**").permitAll()
@@ -87,10 +90,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("ADMIN")
 
-                        // Qualquer outra requisição exige login
+
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
