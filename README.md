@@ -31,6 +31,7 @@ O projeto segue o padrão **MVC** (Model-View-Controller) para garantir a separa
 
 
 ```mermaid
+
 graph TD
     %% Definição de Estilos Avançados
     classDef azul fill:#1A53FF,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
@@ -111,6 +112,7 @@ graph TD
 
     %% Repository -> Banco de Dados
     P & Q & R & S & T & U --> V
+
 ```
   
 
