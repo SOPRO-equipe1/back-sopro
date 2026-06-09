@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    // URL oficial de Chat Completions da OpenAI
+    // Endereço oficial de Chat Completions da OpenAI
     private final String apiUrl = "https://api.openai.com/v1/chat/completions";
 
     @Value("${openai.api.key:}")
@@ -63,7 +63,7 @@ public class ConhecimentoService {
         corpoRequisicao.put("temperature", 0.2);
 
         try {
-
+            // Disparo com cabeçalho de autorização Bearer exigido pela OpenAI
             Map<?, ?> respostaRaw = restClient.post()
                     .uri(apiUrl)
                     .header("Authorization", "Bearer " + apiKey)
