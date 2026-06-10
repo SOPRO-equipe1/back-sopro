@@ -1,5 +1,14 @@
+DROP TABLE IF EXISTS tb_conhecimento;
 
-DELETE FROM tb_conhecimento;
+CREATE TABLE tb_conhecimento (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    conteudo TEXT NOT NULL,
+    metadados VARCHAR(255)
+);
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
+('O que é o SOPRO', 'O SOPRO é uma tecnologia assistiva voltada para pessoas com limitações severas de fala ou motoras (como mutismo). Ele utiliza um dispositivo wearable com sensores de pressão que captam comandos físicos através do sopro.', 'institucional, escopo, sobre, o que e, o que significa, projeto, wearable, dispositivo, aparelho, produto');
 
 INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
 ('O que é o SOPRO', 'O SOPRO é uma tecnologia assistiva voltada para pessoas com limitações severas de fala ou motoras (como mutismo). Ele utiliza um dispositivo wearable com sensores de pressão que captam comandos físicos através do sopro.', 'institucional, escopo, sobre, o que e, o que significa, projeto, wearable, dispositivo, aparelho, produto');
