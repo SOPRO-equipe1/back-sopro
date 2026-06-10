@@ -38,23 +38,22 @@ public class ConhecimentoService {
             return "Erro: A chave OLLAMA_API_KEY não foi configurada no arquivo .env ou no ambiente.";
         }
 
-
         List<Conhecimento> todosConhecimentos = repository.findAll();
-
-
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
 
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO. " +
-                "Seu papel é responder perguntas de forma extremamente acolhedora, empática, clara e humanizada. Use emojis de forma sutil para transmitir calor humano (como 😊, ✨, 💙).\n\n" +
+                "Seu papel é responder perguntas de forma extremamente acolhedora, empática, clara e humanizada. Use emojis de forma sutil (como 😊, ✨, 💙).\n\n" +
+                "REGRAS CRÍTICAS DE FORMATAÇÃO DA RESPOSTA:\n" +
+                "1. Responda APENAS em texto corrido e parágrafos normais.\n" +
+                "2. É TOTALMENTE PROIBIDO usar asteriscos (como **texto**) ou qualquer outra marcação Markdown.\n" +
+                "3. É TOTALMENTE PROIBIDO gerar listas numeradas (1., 2., 3.) ou tópicos com marcadores. Se precisar listar passos, use conectivos no próprio texto, como: 'Primeiramente acontece isso, em seguida aquilo, e por fim isto'.\n\n" +
                 "DIRETRIZES CRÍTICAS DE SEGURANÇA E CONTEXTO:\n" +
-                "1. O usuário JÁ ESTÁ navegando na nossa página oficial. Nunca diga para ele 'acessar o site oficial' ou procurar atualizações em links externos. Oriente-o a acompanhar as novidades por aqui mesmo.\n" +
-                "2. O projeto SOPRO NÃO possui newsletter, NÃO possui e-mails de contato externos (como contato@sopro.org) e NÃO possui formulários em outros locais. Nunca invente esses canais de comunicação.\n" +
-                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se a informação não estiver presente de forma explícita, explique com carinho que o protótipo está em fase de validação para o Demo Day e que em breve traremos novidades aqui na página.\n" +
-                "4. Nunca mencione termos internos de desenvolvimento como 'banco de dados', 'JSON', 'SQL' ou 'RAG'.\n\n" +
+                "1. O usuário JÁ ESTÁ navegando na nossa página oficial. Nunca diga para ele 'acessar o site oficial'. Oriente-o a acompanhar as novidades por aqui mesmo.\n" +
+                "2. O projeto SOPRO NÃO possui newsletter, NÃO possui e-mails de contato externos e NÃO possui formulários em outros locais.\n" +
+                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se a informação não estiver presente de forma explícita, explique com carinho que o protótipo está em fase de validação para o Demo Day.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
-
 
         Map<String, String> messageSystem = Map.of("role", "system", "content", promptSistema);
         Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
@@ -62,7 +61,7 @@ public class ConhecimentoService {
         Map<String, Object> corpoRequisicao = new HashMap<>();
         corpoRequisicao.put("model", "gpt-oss:120b");
         corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
-        corpoRequisicao.put("temperature", 0.0); // Trava o modelo para não alucinar!
+        corpoRequisicao.put("temperature", 0.0); // Temperatura zerada garante obediência cega às regras de formato!
 
         try {
             Map<?, ?> respostaRaw = restClient.post()
@@ -75,7 +74,7 @@ public class ConhecimentoService {
 
             return extrairTextoDoOllamaOss(respostaRaw);
         } catch (Exception e) {
-            System.err.println("⚠️ Alerta SOPRO: Instabilidade no Ollama remoto. Erro: " + e.getMessage());
+            System.err.println("Alerta SOPRO: Instabilidade no Ollama remoto. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
     }
@@ -95,14 +94,11 @@ public class ConhecimentoService {
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
         String perguntaMin = pergunta.toLowerCase();
-
-
         List<Conhecimento> filtrados = base.stream()
                 .filter(c -> c.getTitulo().toLowerCase().contains(perguntaMin) ||
                         perguntaMin.contains(c.getTitulo().toLowerCase()) ||
                         (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
                 .collect(Collectors.toList());
-
 
         if (filtrados.isEmpty()) {
             filtrados = base.stream()
@@ -116,7 +112,6 @@ public class ConhecimentoService {
     }
 
     private boolean verificarTags(String metadados, String pergunta) {
-
         for (String tag : metadados.split(",")) {
             String tagLimpa = tag.trim().toLowerCase();
             if (!tagLimpa.isEmpty() && (pergunta.contains(tagLimpa) || tagLimpa.contains(pergunta))) {

@@ -22,7 +22,7 @@ public class ProjectDemodayApplication {
 				List<String> linhas = Files.readAllLines(Paths.get(".env"));
 				for (String linha : linhas) {
 					linha = linha.trim();
-					// Ignora linhas totalmente vazias, comentários e garante que possui o caractere '='
+
 					if (!linha.isEmpty() && !linha.startsWith("#") && linha.contains("=")) {
 						String[] partes = linha.split("=", 2);
 						String chave = partes[0].trim();
