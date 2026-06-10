@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    private final String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
-    @Value("${GEMINI_API_KEY:}")
+    private final String apiUrl = "https://ollama.com/v1/chat/completions";
+
+
+    @Value("${OLLAMA_API_KEY:}")
     private String apiKey;
 
     @Autowired
@@ -34,15 +36,16 @@ public class ConhecimentoService {
             return "Por favor, envie uma mensagem válida.";
         }
 
+
         if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
-            return "Erro: A chave GEMINI_API_KEY não foi configurada no arquivo .env.";
+            return "Erro: A chave OLLAMA_API_KEY não foi configurada no arquivo .env ou no ambiente.";
         }
 
-        //  Coleta a base de dados reais do projeto
+
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        //  Prompt
+
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
                 "Seu papel é auxiliar pessoas com limitações motoras ou de fala, além de seus familiares, com respostas empáticas, claras e extremamente precisas.\n\n" +
                 "DIRETRIZES DE SEGURANÇA E CONTEXTO:\n" +
@@ -50,41 +53,54 @@ public class ConhecimentoService {
                 "2. Se a informação necessária não estiver presente nos dados reais fornecidos abaixo, responda cordialmente explicando que o projeto está em constante evolução e que você ainda não possui esse detalhe específico, evitando inventar características técnicas ou comerciais não existentes.\n" +
                 "3. Nunca mencione termos técnicos internos como 'banco de dados', 'JSON' ou 'SQL' para o usuário final.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
-                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
-                "Mensagem enviada pelo usuário: " + mensagemUsuario;
-
-        // Montagem pedidada pela API do Gemini
-        Map<String, Object> textPart = Map.of("text", promptSistema);
-        Map<String, Object> parts = Map.of("parts", List.of(textPart));
+                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
 
-        Map<String, Object> contentObject = Map.of(
-                "role", "user",
-                "parts", List.of(textPart)
-        );
-
-
-        Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("temperature", 0.2);
-        generationConfig.put("maxOutputTokens", 800);
-
+        Map<String, String> messageSystem = Map.of("role", "system", "content", promptSistema);
+        Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
-        corpoRequisicao.put("contents", List.of(contentObject));
-        corpoRequisicao.put("generationConfig", generationConfig);
+        corpoRequisicao.put("model", "gpt-oss:120b"); // <-- O modelo gigante que seu amigo descobriu!
+        corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
+
+
+        corpoRequisicao.put("temperature", 0.1);
 
         try {
+
             Map<?, ?> respostaRaw = restClient.post()
-                    .uri(apiUrl + "?key=" + apiKey)
+                    .uri(apiUrl)
+                    .header("Authorization", "Bearer " + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(corpoRequisicao)
                     .retrieve()
                     .body(Map.class);
 
-            return extrairTextoDoGemini(respostaRaw);
+            return extrairTextoDoMundoOss(respostaRaw);
+
         } catch (Exception e) {
-            return "O motor do chatbot falhou a conectar com a inteligência do Gemini: " + e.getMessage();
+
+            System.err.println("⚠️ Alerta SOPRO: Instabilidade detectada na API remota. Erro: " + e.getMessage());
+            return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
+    }
+
+    private String gerarRespostaDeContingenciaLocal(List<Conhecimento> base, String perguntaUsuario) {
+        String perguntaMin = perguntaUsuario.toLowerCase();
+
+        List<Conhecimento> correspondencias = base.stream()
+                .filter(c -> perguntaMin.contains(c.getTitulo().toLowerCase()) ||
+                        (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
+                .collect(Collectors.toList());
+
+        if (!correspondencias.isEmpty()) {
+            Conhecimento dadosLocais = correspondencias.get(0);
+            return "Olá! O Soprinho está operando em modo de contingência de segurança no momento. " +
+                    "Com base nas especificações do projeto: " + dadosLocais.getConteudo();
+        }
+
+        return "Olá! O Soprinho está operando em modo de segurança local no momento devido a uma instabilidade temporária na rede. " +
+                "Para que eu possa te ajudar com precisão, tente utilizar palavras-chave simplificadas como 'sensor', 'dispositivo' ou 'plano'.";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
@@ -113,27 +129,21 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoGemini(Map<?, ?> respostaRaw) {
+    private String extrairTextoDoMundoOss(Map<?, ?> respostaRaw) {
         try {
-            if (respostaRaw != null && respostaRaw.containsKey("candidates")) {
-                List<?> candidates = (List<?>) respostaRaw.get("candidates");
-                if (!candidates.isEmpty()) {
-                    Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
-                    Map<?, ?> content = (Map<?, ?>) firstCandidate.get("content");
-                    if (content != null && content.containsKey("parts")) {
-                        List<?> parts = (List<?>) content.get("parts");
-                        if (!parts.isEmpty()) {
-                            Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
-                            if (firstPart.containsKey("text")) {
-                                return (String) firstPart.get("text");
-                            }
-                        }
+            if (respostaRaw != null && respostaRaw.containsKey("choices")) {
+                List<?> choices = (List<?>) respostaRaw.get("choices");
+                if (!choices.isEmpty()) {
+                    Map<?, ?> firstChoice = (Map<?, ?>) choices.get(0);
+                    Map<?, ?> message = (Map<?, ?>) firstChoice.get("message");
+                    if (message != null && message.containsKey("content")) {
+                        return (String) message.get("content");
                     }
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar a resposta do motor de IA.";
+            return "Erro ao processar a estrutura de resposta do motor de IA.";
         }
-        return "O Gemini não conseguiu gerar uma resposta válida.";
+        return "O servidor remoto não conseguiu gerar uma resposta estruturada válida.";
     }
 }
