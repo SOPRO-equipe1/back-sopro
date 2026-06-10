@@ -1,4 +1,4 @@
--- Certifique-se de usar uma instrução por linha e que os campos batam com a sua entidade Conhecimento
+
 INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('O que é o SOPRO', 'O SOPRO é uma tecnologia assistiva voltada para pessoas com limitações severas de fala ou motoras (como mutismo). Ele utiliza um dispositivo wearable com sensores de pressão que captam comandos físicos através do sopro.', 'institucional, escopo');
 
 INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Como funciona a tecnologia', 'O dispositivo possui sensores conectados a um microcontrolador que mede a intensidade do sopro. Esses dados são processados localmente por um modelo de TinyML (Machine Learning embarcado) para identificar padrões e traduzi-los em voz sintetizada ou comandos no aplicativo.', 'tecnico, hardware, tinyml');

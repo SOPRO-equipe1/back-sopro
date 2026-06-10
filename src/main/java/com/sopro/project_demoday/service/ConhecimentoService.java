@@ -33,7 +33,7 @@ public class ConhecimentoService {
 
     public String sussurrarParaIA(String mensagemUsuario) {
         if (mensagemUsuario == null || mensagemUsuario.trim().isEmpty()) {
-            return "Por favor, envie uma mensagem válida.";
+            return "Olá! 😊 Por favor, envie uma mensagem válida para que eu possa te ajudar.";
         }
 
 
@@ -46,13 +46,14 @@ public class ConhecimentoService {
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
 
-        String promptSistema = "Você é o Soprinho, o assistente virtual oficial de tecnologia assistiva do projeto SOPRO. " +
-                "Seu papel é auxiliar pessoas com limitações motoras ou de fala, além de seus familiares, com respostas empáticas, claras e extremamente precisas.\n\n" +
-                "DIRETRIZES DE SEGURANÇA E CONTEXTO:\n" +
-                "1. Baseie sua resposta prioritariamente nos fatos reais do projeto listados abaixo.\n" +
-                "2. Se a informação necessária não estiver presente nos dados reais fornecidos abaixo, responda cordialmente explicando que o projeto está em constante evolução e que você ainda não possui esse detalhe específico, evitando inventar características técnicas ou comerciais não existentes.\n" +
-                "3. Nunca mencione termos técnicos internos como 'banco de dados', 'JSON' ou 'SQL' para o usuário final.\n\n" +
-                "DADOS REAIS DO PROJETO SOPRO:\n" +
+        String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO. " +
+                "Seu papel é responder perguntas de forma extremamente acolhedora, empática, clara e humanizada. Use emojis de forma sutil para transmitir calor humano (como 😊, ✨, 💙).\n\n" +
+                "DIRETRIZES CRÍTICAS DE SEGURANÇA E CONTEXTO:\n" +
+                "1. O usuário JÁ ESTÁ navegando na nossa página/plataforma oficial. Nunca diga para ele 'acessar o site oficial' ou procurar atualizações em outro link. Se quiser orientá-lo, diga para acompanhar as novidades por aqui mesmo, nesta página.\n" +
+                "2. O projeto SOPRO NÃO possui newsletter, NÃO possui e-mails de contato externos (como contato@sopro.org) e NÃO possui formulários em outros locais. Nunca invente esses canais de comunicação.\n" +
+                "3. Baseie sua resposta EXCLUSIVAMENTE nos fatos reais e verdadeiros listados abaixo. Se a informação não estiver presente de forma explícita (como preços ou links de compra), explique de forma muito doce e gentil que o protótipo está em fase de validação para o Demo Day e que em breve teremos novidades compartilhadas aqui na página.\n" +
+                "4. Nunca mencione termos internos de programação como 'banco de dados', 'JSON', 'SQL' ou 'RAG'.\n\n" +
+                "DADOS REAIS E VERDADEIROS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
 
@@ -60,14 +61,14 @@ public class ConhecimentoService {
         Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
-        corpoRequisicao.put("model", "gpt-oss:120b"); // <-- O modelo gigante que seu amigo descobriu!
+        corpoRequisicao.put("model", "gpt-oss:120b"); // O modelo do gateway Ollama
         corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
 
 
         corpoRequisicao.put("temperature", 0.1);
 
         try {
-
+            // Dispara adicionando o cabeçalho "Authorization: Bearer" com a OLLAMA_API_KEY
             Map<?, ?> respostaRaw = restClient.post()
                     .uri(apiUrl)
                     .header("Authorization", "Bearer " + apiKey)
@@ -76,11 +77,9 @@ public class ConhecimentoService {
                     .retrieve()
                     .body(Map.class);
 
-            return extrairTextoDoMundoOss(respostaRaw);
-
+            return extrairTextoDoOllamaOss(respostaRaw);
         } catch (Exception e) {
-
-            System.err.println("⚠️ Alerta SOPRO: Instabilidade detectada na API remota. Erro: " + e.getMessage());
+            System.err.println("⚠️ Alerta SOPRO: Instabilidade detectada na API externa do Ollama. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
     }
@@ -95,12 +94,12 @@ public class ConhecimentoService {
 
         if (!correspondencias.isEmpty()) {
             Conhecimento dadosLocais = correspondencias.get(0);
-            return "Olá! O Soprinho está operando em modo de contingência de segurança no momento. " +
-                    "Com base nas especificações do projeto: " + dadosLocais.getConteudo();
+            return "Olá! 😊 O Soprinho está operando em um modo de segurança local no momento, mas com muito carinho te informo que, " +
+                    "de acordo com as especificações oficiais: " + dadosLocais.getConteudo();
         }
 
-        return "Olá! O Soprinho está operando em modo de segurança local no momento devido a uma instabilidade temporária na rede. " +
-                "Para que eu possa te ajudar com precisão, tente utilizar palavras-chave simplificadas como 'sensor', 'dispositivo' ou 'plano'.";
+        return "Olá! 💙 O Soprinho está operando em modo de segurança simplificado agora. " +
+                "Para que eu possa te ajudar melhor, tente digitar termos mais simples como 'sensor', 'dispositivo' ou 'design'. Estou aqui por você!";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
@@ -129,7 +128,7 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoMundoOss(Map<?, ?> respostaRaw) {
+    private String extrairTextoDoOllamaOss(Map<?, ?> respostaRaw) {
         try {
             if (respostaRaw != null && respostaRaw.containsKey("choices")) {
                 List<?> choices = (List<?>) respostaRaw.get("choices");
@@ -142,8 +141,8 @@ public class ConhecimentoService {
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar a estrutura de resposta do motor de IA.";
+            return "Erro ao ler a resposta estruturada do motor de inteligência artificial do Ollama.";
         }
-        return "O servidor remoto não conseguiu gerar uma resposta estruturada válida.";
+        return "A API do Ollama não retornou um formato de texto válido.";
     }
 }
