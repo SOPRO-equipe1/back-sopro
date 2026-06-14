@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
@@ -25,13 +26,16 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @PostMapping("/cadastro")
-    public ResponseEntity<UsuarioRespostaDTO> cadastrar(@Valid @RequestBody UsuarioCadastroDTO dto) {
+    public ResponseEntity<?> cadastrar(@Valid @RequestBody UsuarioCadastroDTO dto) {
         try {
             UsuarioRespostaDTO response = usuarioService.cadastrar(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (ResponseStatusException e) {
+            logger.error("Aviso de regra de negócio no cadastro: " + e.getReason());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
-            logger.error("Erro ao realizar o cadastro de novo usuário no sistema.", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Erro fatal ao realizar o cadastro de novo usuário no MySQL/Azure.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno no banco de dados do Azure: " + e.getMessage());
         }
     }
 

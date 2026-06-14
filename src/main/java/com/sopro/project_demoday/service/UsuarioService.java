@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,7 +41,15 @@ public class UsuarioService {
         usuario.setNomeCompleto(dto.getNome() != null ? dto.getNome() : "Usuário SOPRO");
 
 
-        usuario.setCpf("000.000.000-" + String.format("%02d", new java.util.Random().nextInt(99))); // CPF Simulado Único
+        // Evita erros de validação de tamanho de string (VARCHAR(14)) e colisões de chaves UNIQUE no MySQL
+        Random random = new Random();
+        String cpfFake = String.format("%03d.%03d.%03d-%02d",
+                random.nextInt(1000),
+                random.nextInt(1000),
+                random.nextInt(1000),
+                random.nextInt(100));
+        usuario.setCpf(cpfFake);
+
         usuario.setTelefoneCelular("(00) 00000-0000");
         usuario.setDataNascimento(java.time.LocalDate.of(2000, 1, 1));
         usuario.setCidadeEstado("Não Informado");
@@ -85,7 +94,6 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-
         usuarioRepository.save(usuario);
     }
 
@@ -99,6 +107,7 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
+
     public UsuarioRespostaDTO buscarPorEmail(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
@@ -106,7 +115,6 @@ public class UsuarioService {
     }
 
     private UsuarioRespostaDTO converterParaDTO(Usuario usuario) {
-
         return new UsuarioRespostaDTO(
                 usuario.getId(),
                 usuario.getNomeCompleto(),
