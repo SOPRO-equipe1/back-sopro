@@ -37,14 +37,15 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        usuario.setNomeCompleto(dto.getNome() != null ? dto.getNome() : "Usuário SOPRO");
 
 
-        if (dto.getNome() != null) {
-            usuario.setNomeCompleto(dto.getNome());
-        }
+        usuario.setCpf("000.000.000-" + String.format("%02d", new java.util.Random().nextInt(99))); // CPF Simulado Único
+        usuario.setTelefoneCelular("(00) 00000-0000");
+        usuario.setDataNascimento(java.time.LocalDate.of(2000, 1, 1));
+        usuario.setCidadeEstado("Não Informado");
 
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
-
 
         PreferenciasAcessibilidade preferencias = new PreferenciasAcessibilidade(usuarioSalvo);
         preferenciasRepository.save(preferencias);
