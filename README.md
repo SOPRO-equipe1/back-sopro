@@ -130,7 +130,25 @@ graph TD
  **Banco de Dados:** MySQL.
  **Segurança:** Spring Security & OAuth2.
 
- </div>
+
+
+ ## 🌐 Infraestrutura e hospedagem (Azure App Services)
+
+O ambiente de produção e homologação do backend do projeto SOPRO utiliza o **Azure App Services** para hospedagem da API em Spring Boot. Durante os ciclos de teste (Sprint 3), foram documentados comportamentos específicos da infraestrutura que impactam diretamente os indicadores de performance do sistema.
+
+### Análise de latência e "Cold Start"
+
+Identificou-se um comportamento de **Cold Start (Inicialização a Frio)** severo nas janelas de inatividade da aplicação. Como a API foi construída utilizando a stack Java 17 + Spring Boot, o processo de inicialização do container e carregamento do contexto do Spring exige um consumo inicial considerável de CPU e memória.
+
+ **Evidência Gráfica:** Em análises de telemetria, registrou-se um pico onde apenas **2 requisições** resultaram em um *Response Time (Max)* de **1.18 minutos** após um período de ociosidade do servidor.
+ 
+ **Causa Raiz:** O plano de serviço atual (camada gratuita/básica) coloca a aplicação em estado de hibernação (*idling*) quando não há tráfego constante. A primeira requisição subsequente precisa acordar a instância, resultando na latência observada.
+ 
+ **Comportamento normalizado:** Após a inicialização inicial (aquecimento do ambiente), o tempo de resposta estabiliza-se na casa dos milissegundos para as requisições seguintes.
+
+![MétricaAzure](docs/diagrams/AppService.png)
+
+   </div>
 
 ## Como Executar o projeto
 
