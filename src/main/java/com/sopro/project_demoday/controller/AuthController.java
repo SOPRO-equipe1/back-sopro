@@ -52,7 +52,7 @@ public class AuthController {
                     new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
                             new com.google.api.client.http.javanet.NetHttpTransport(),
                             new com.google.api.client.json.gson.GsonFactory())
-                            .setAudience(Collections.singletonList("TEU_CLIENT_ID_DO_GOOGLE.apps.googleusercontent.com"))
+                            .setAudience(Collections.singletonList("668261340880-j3djh4lugbo1kb0hs3if8g9734q1u7kl.apps.googleusercontent.com"))
                             .build();
 
             com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = verifier.verify(tokenGoogle);
