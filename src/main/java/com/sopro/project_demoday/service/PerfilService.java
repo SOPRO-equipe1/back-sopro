@@ -5,9 +5,11 @@ import com.sopro.project_demoday.dto.SalvarPerfilDTO;
 import com.sopro.project_demoday.model.Endereco;
 import com.sopro.project_demoday.model.Pedido;
 import com.sopro.project_demoday.model.Usuario;
+import com.sopro.project_demoday.repository.EnderecoRepository;
 import com.sopro.project_demoday.repository.PedidoRepository;
 import com.sopro.project_demoday.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,10 +17,12 @@ public class PerfilService {
 
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
+    private final EnderecoRepository enderecoRepository;
 
-    public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository) {
+    public PerfilService(UsuarioRepository usuarioRepository, PedidoRepository pedidoRepository, EnderecoRepository enderecoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
+        this.enderecoRepository = enderecoRepository;
     }
 
     public PerfilResponseDTO obterPerfilPorEmail(String email) {
@@ -74,7 +78,7 @@ public class PerfilService {
         );
     }
 
-    // BOTÃO 1: Salva estritamente as Informações Pessoais do Usuário
+    //  Salva estritamente as Informações Pessoais do Usuário
     @Transactional
     public void atualizarDadosPessoais(String email, SalvarPerfilDTO dto) {
         Usuario usuario = usuarioRepository.findByEmail(email)
@@ -100,13 +104,15 @@ public class PerfilService {
             endereco = new Endereco();
         }
 
-
         endereco.setCep(dto.cep() != null ? dto.cep() : "00000-000");
         endereco.setNumero(dto.numero() != null ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null ? dto.bairro() : "Bairro");
         endereco.setCidade(dto.cidade() != null ? dto.cidade() : "Cidade");
         endereco.setEstado(dto.estado() != null ? dto.estado() : "SP");
+
+        // SALVAMENTO
+        endereco = enderecoRepository.save(endereco);
 
         usuario.setEndereco(endereco);
         usuarioRepository.save(usuario);
