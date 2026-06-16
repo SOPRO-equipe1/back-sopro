@@ -171,4 +171,4 @@ DB_PASSWORD=suasenha
 
 ```
 
-<div align= "center"> Desenvolvido com 💙 e muito café pela equipe do Back-end. </div>
+<div align= "center"> Desenvolvido com 💙 e muito café pela equipe do Back-end - Instituto PROA, 2026 </div>
