@@ -13,15 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class AssinaturaService {
 
-
-    // tirar e colocar construtor para injeção de dependência depois
     @Autowired
     private AssinaturaRepository assinaturaRepository;
 
@@ -53,6 +51,7 @@ public class AssinaturaService {
 
         Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
                 .orElse(new Assinatura());
+
         assinatura.setUsuario(usuario);
         assinatura.setPlano(dto.plano());
         assinatura.setStatus("ATIVO");
@@ -67,7 +66,10 @@ public class AssinaturaService {
 
 
         Pedido novoPedido = new Pedido();
-        novoPedido.setCodigoPedido(dto.transactionId());
+
+
+        novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
+
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
         novoPedido.setCodigoRastreio("RU" + (new java.util.Random().nextInt(900000000) + 100000000) + "BR");
@@ -76,5 +78,14 @@ public class AssinaturaService {
         novoPedido.setUsuario(usuario);
 
         pedidoRepository.save(novoPedido);
+    }
+
+    public Assinatura obterAssinaturaPorEmail(String email) {
+        return assinaturaRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new RuntimeException("Nenhuma assinatura ativa encontrada para este usuário."));
+    }
+
+    public List<Pagamento> obterHistoricoPagamentos(String email) {
+        return pagamentoRepository.findByUsuarioEmail(email);
     }
 }
