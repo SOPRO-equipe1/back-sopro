@@ -45,17 +45,25 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<?> loginComGoogle(@RequestBody Map<String, String> request) {
         try {
+
             String tokenGoogle = request.get("token");
 
+            if (tokenGoogle == null || tokenGoogle.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token do Google ausente no payload.");
+            }
+
+
+            String googleClientId = "668261340880-j3djh4lugbo1kb0hs3if8g9734q1u7kl.apps.googleusercontent.com";
 
             com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier =
                     new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
                             new com.google.api.client.http.javanet.NetHttpTransport(),
                             new com.google.api.client.json.gson.GsonFactory())
-                            .setAudience(Collections.singletonList("668261340880-j3djh4lugbo1kb0hs3if8g9734q1u7kl.apps.googleusercontent.com"))
+                            .setAudience(Collections.singletonList(googleClientId))
                             .build();
 
             com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = verifier.verify(tokenGoogle);
+
             if (idToken != null) {
                 com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
                 String email = payload.getEmail();
@@ -77,11 +85,10 @@ public class AuthController {
                     usuarioRepository.save(novoUsuario);
                 }
 
-
                 Usuario usuarioCarregado = usuarioRepository.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("Erro ao carregar credenciais criadas."));
 
-
+                // Gera o token JWT interno aplicação
                 String sistemaToken = jwtService.gerarToken(usuarioCarregado);
 
                 Map<String, String> responseBody = new HashMap<>();
@@ -90,9 +97,9 @@ public class AuthController {
                 responseBody.put("nome", nome);
                 return ResponseEntity.ok(responseBody);
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token do Google Inválido");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token do Google Inválido ou expirado.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno no servidor de autenticação: " + e.getMessage());
         }
     }
 }
