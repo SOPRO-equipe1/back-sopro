@@ -42,22 +42,24 @@ public class AssinaturaService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
-        // 1. SALVA E POPULA A TABELA DE ENDEREÇO (tb_endereco) COM OS DADOS DO FRONT
         Endereco endereco = usuario.getEndereco();
         if (endereco == null) {
             endereco = new Endereco();
         }
         endereco.setCep(dto.cep() != null ? dto.cep() : "00000-000");
-
         endereco.setNumero(dto.numero() != null ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null ? dto.bairro() : "Bairro não informado");
         endereco.setCidade(dto.cidade() != null ? dto.cidade() : "Cidade não informada");
         endereco.setEstado(dto.estado() != null ? dto.estado() : "SP");
 
+
         endereco = enderecoRepository.save(endereco);
+
+
         usuario.setEndereco(endereco);
         usuarioRepository.save(usuario);
+
 
 
         Pagamento pagamento = new Pagamento(
