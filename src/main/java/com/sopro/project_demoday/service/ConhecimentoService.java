@@ -62,7 +62,7 @@ public class ConhecimentoService {
         Map<String, Object> corpoRequisicao = new HashMap<>();
         corpoRequisicao.put("model", "gpt-oss:120b");
         corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
-        corpoRequisicao.put("temperature", 0.0); // Temperatura zerada garante obediência cega às regras de formato!
+        corpoRequisicao.put("temperature", 0.0);
 
         try {
             Map<?, ?> respostaRaw = restClient.post()
