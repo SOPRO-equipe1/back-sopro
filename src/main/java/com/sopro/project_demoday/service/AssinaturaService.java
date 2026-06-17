@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Random;
 
 @Service
@@ -40,7 +39,6 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
-
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
@@ -50,21 +48,22 @@ public class AssinaturaService {
         }
 
 
+        endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "00000-000");
         endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro não informado");
         endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade não informada");
         endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
 
-
         endereco = enderecoRepository.save(endereco);
 
         usuario.setEndereco(endereco);
-        Usuario usuarioAtualizado = usuarioRepository.save(usuario);
 
+        Usuario usuarioPersistido = usuarioRepository.save(usuario);
 
+        // Criar o pagamento associado ao Usuário atualizado
         Pagamento pagamento = new Pagamento(
-                usuarioAtualizado,
+                usuarioPersistido,
                 dto.valor(),
                 dto.formaPagamento(),
                 "PAGO",
@@ -73,10 +72,11 @@ public class AssinaturaService {
         );
         pagamentoRepository.save(pagamento);
 
+        // Gerenciar Assinatura
         Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
                 .orElse(new Assinatura());
 
-        assinatura.setUsuario(usuarioAtualizado);
+        assinatura.setUsuario(usuarioPersistido);
         assinatura.setPlano(dto.plano());
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
@@ -90,7 +90,7 @@ public class AssinaturaService {
 
 
         Pedido novoPedido = new Pedido();
-        novoPedido.setUsuario(usuarioAtualizado);
+        novoPedido.setUsuario(usuarioPersistido);
         novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
@@ -106,7 +106,7 @@ public class AssinaturaService {
                 .orElseThrow(() -> new RuntimeException("Nenhuma assinatura ativa encontrada para este usuário."));
     }
 
-    public List<Pagamento> obterHistoricoPagamentos(String email) {
+    public java.util.List<Pagamento> obterHistoricoPagamentos(String email) {
         return pagamentoRepository.findByUsuarioEmail(email);
     }
 }

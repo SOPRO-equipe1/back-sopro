@@ -3,7 +3,6 @@ package com.sopro.project_demoday.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import com.sopro.project_demoday.model.Usuario;
 
 @Entity
 @Table(name = "tb_pedido")
@@ -14,16 +13,16 @@ public class Pedido {
     private Long id;
 
     @Column(name = "codigo_pedido", nullable = false, unique = true)
-    private String codigoPedido; // Ex: "#SP-2026-01"
+    private String codigoPedido;
 
     @Column(name = "produto_descricao", nullable = false)
-    private String produtoDescricao; // Ex: "1x Dispositivo Sopro - Cor Preta"
+    private String produtoDescricao;
 
     @Column(name = "status_status", nullable = false)
-    private String statusStatus; // CONFIRMADO, PREPARANDO, EM_TRANSPORTE, ENTREGUE
+    private String statusStatus;
 
     @Column(name = "codigo_rastreio")
-    private String codigoRastreio; // Ex: "RU182121051419BR"
+    private String codigoRastreio;
 
     @Column(name = "data_entrega_prevista")
     private LocalDate dataEntregaPrevista;
@@ -31,14 +30,13 @@ public class Pedido {
     @Column(name = "valor_total", nullable = false)
     private BigDecimal valorTotal;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-
     public Pedido() {
     }
-
 
 
     public Long getId() {
