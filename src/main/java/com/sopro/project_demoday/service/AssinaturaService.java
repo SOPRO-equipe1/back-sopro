@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class AssinaturaService {
@@ -42,6 +43,7 @@ public class AssinaturaService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
+
         Endereco endereco = usuario.getEndereco();
         if (endereco == null) {
             endereco = new Endereco();
@@ -58,8 +60,7 @@ public class AssinaturaService {
 
 
         usuario.setEndereco(endereco);
-        usuarioRepository.save(usuario);
-
+        usuario = usuarioRepository.save(usuario);
 
 
         Pagamento pagamento = new Pagamento(
@@ -67,7 +68,7 @@ public class AssinaturaService {
                 dto.valor(),
                 dto.formaPagamento(),
                 "PAGO",
-                dto.transactionId(),
+                dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
                 LocalDateTime.now()
         );
         pagamentoRepository.save(pagamento);
@@ -90,13 +91,13 @@ public class AssinaturaService {
 
 
         Pedido novoPedido = new Pedido();
+        novoPedido.setUsuario(usuario);
         novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
-        novoPedido.setCodigoRastreio("RU" + (new java.util.Random().nextInt(900000000) + 100000000) + "BR");
+        novoPedido.setCodigoRastreio("RU" + (new Random().nextInt(90000000) + 10000000) + "BR");
         novoPedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
         novoPedido.setValorTotal(dto.valor());
-        novoPedido.setUsuario(usuario);
 
         pedidoRepository.save(novoPedido);
     }
