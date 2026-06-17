@@ -39,44 +39,45 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
+        // 1. Busca o usuário gerenciado pelo Hibernate
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
-        Endereco endereco = usuario.getEndereco();
-        if (endereco == null) {
-            endereco = new Endereco();
+        // 2. Vincula ou cria o endereço diretamente acoplado ao ciclo do Usuário
+        if (usuario.getEndereco() == null) {
+            usuario.setEndereco(new Endereco());
         }
 
+        Endereco endereco = usuario.getEndereco();
 
+        // Tratamento estrito contra strings vazias vindas do frontend
         endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "00000-000");
+        endereco.setLogradouro(dto.produtoDescricao() != null ? "Logradouro Padrão" : "Não informado"); // Exemplo de fallback seguro
         endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro não informado");
         endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade não informada");
         endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
 
-        endereco = enderecoRepository.save(endereco);
+        // Salva o usuário injetando o endereço pelo CascadeType.ALL e força o banco a gravar na hora
+        Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
 
-        usuario.setEndereco(endereco);
-
-        Usuario usuarioPersistido = usuarioRepository.save(usuario);
-
-        // Criar o pagamento associado ao Usuário atualizado
+        // 3. Salva o Pagamento usando a referência limpa gerada
         Pagamento pagamento = new Pagamento(
-                usuarioPersistido,
+                usuarioSalvo,
                 dto.valor(),
                 dto.formaPagamento(),
                 "PAGO",
                 dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
                 LocalDateTime.now()
         );
-        pagamentoRepository.save(pagamento);
+        pagamentoRepository.saveAndFlush(pagamento);
 
-        // Gerenciar Assinatura
+        // 4. Salva/Atualiza a Assinatura
         Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
                 .orElse(new Assinatura());
 
-        assinatura.setUsuario(usuarioPersistido);
+        assinatura.setUsuario(usuarioSalvo);
         assinatura.setPlano(dto.plano());
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
@@ -86,11 +87,11 @@ public class AssinaturaService {
         } else {
             assinatura.setDataExpiracao(LocalDateTime.now().plusYears(1));
         }
-        assinaturaRepository.save(assinatura);
+        assinaturaRepository.saveAndFlush(assinatura);
 
 
         Pedido novoPedido = new Pedido();
-        novoPedido.setUsuario(usuarioPersistido);
+        novoPedido.setUsuario(usuarioSalvo);
         novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
@@ -98,7 +99,7 @@ public class AssinaturaService {
         novoPedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
         novoPedido.setValorTotal(dto.valor());
 
-        pedidoRepository.save(novoPedido);
+        pedidoRepository.saveAndFlush(novoPedido);
     }
 
     public Assinatura obterAssinaturaPorEmail(String email) {

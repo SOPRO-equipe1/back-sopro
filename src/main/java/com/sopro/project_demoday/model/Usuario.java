@@ -46,12 +46,12 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private RoleUsuario role = RoleUsuario.USUARIO;
 
-    // Relacionamento com Endereço (Preenchido na tela de Perfil)
-    @OneToOne(cascade = CascadeType.ALL)
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private Endereco endereco;
 
-    // Relacionamento com Assinatura (Controlado pelo botão de assinar)
+
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Assinatura assinatura;
