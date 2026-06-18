@@ -39,30 +39,27 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
-        // 1. Busca o usuário gerenciado pelo Hibernate
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
-        // 2. Vincula ou cria o endereço diretamente acoplado ao ciclo do Usuário
+
         if (usuario.getEndereco() == null) {
             usuario.setEndereco(new Endereco());
         }
 
         Endereco endereco = usuario.getEndereco();
-
-        // Tratamento estrito contra strings vazias vindas do frontend
         endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "00000-000");
-        endereco.setLogradouro(dto.produtoDescricao() != null ? "Logradouro Padrão" : "Não informado"); // Exemplo de fallback seguro
+        endereco.setLogradouro("Logradouro Padrão");
         endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro não informado");
         endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade não informada");
         endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
 
-        // Salva o usuário injetando o endereço pelo CascadeType.ALL e força o banco a gravar na hora
+
         Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
 
-        // 3. Salva o Pagamento usando a referência limpa gerada
+        // Salva o pagamento
         Pagamento pagamento = new Pagamento(
                 usuarioSalvo,
                 dto.valor(),
@@ -73,25 +70,18 @@ public class AssinaturaService {
         );
         pagamentoRepository.saveAndFlush(pagamento);
 
-        // 4. Salva/Atualiza a Assinatura
-        Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
-                .orElse(new Assinatura());
 
+        Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email).orElse(new Assinatura());
         assinatura.setUsuario(usuarioSalvo);
         assinatura.setPlano(dto.plano());
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
-
-        if ("MENSAL".equalsIgnoreCase(dto.plano())) {
-            assinatura.setDataExpiracao(LocalDateTime.now().plusMonths(1));
-        } else {
-            assinatura.setDataExpiracao(LocalDateTime.now().plusYears(1));
-        }
+        assinatura.setDataExpiracao(LocalDateTime.now().plusMonths(1));
         assinaturaRepository.saveAndFlush(assinatura);
 
 
         Pedido novoPedido = new Pedido();
-        novoPedido.setUsuario(usuarioSalvo);
+        novoPedido.setUsuario(usuarioSalvo); // Referência direta síncrona
         novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
@@ -101,7 +91,6 @@ public class AssinaturaService {
 
         pedidoRepository.saveAndFlush(novoPedido);
     }
-
     public Assinatura obterAssinaturaPorEmail(String email) {
         return assinaturaRepository.findByUsuarioEmail(email)
                 .orElseThrow(() -> new RuntimeException("Nenhuma assinatura ativa encontrada para este usuário."));
