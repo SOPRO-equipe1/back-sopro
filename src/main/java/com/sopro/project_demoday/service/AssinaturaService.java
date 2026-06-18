@@ -39,40 +39,46 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
+        // 1. Força a busca do usuário real e limpa o cache da nuvem
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
+        // 2. SALVAMENTO BRUTO ISOLADO DO ENDEREÇO
+        // Criamos um novo endereço do zero para não herdar lixo de proxy ou chaves com problema
+        Endereco novoEndereco = new Endereco();
 
-        if (usuario.getEndereco() == null) {
-            usuario.setEndereco(new Endereco());
-        }
-
-        Endereco endereco = usuario.getEndereco();
-        endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "00000-000");
-        endereco.setLogradouro("Logradouro Padrão");
-        endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
-        endereco.setComplemento(dto.complemento());
-        endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro não informado");
-        endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade não informada");
-        endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
+        // Validação agressiva para impedir que strings vazias quebrem o banco
+        novoEndereco.setCep(dto.cep() != null && !dto.cep().trim().isEmpty() ? dto.cep().trim() : "00000-000");
+        novoEndereco.setLogradouro("Logradouro Atualizado via Checkout");
+        novoEndereco.setNumero(dto.numero() != null && !dto.numero().trim().isEmpty() ? dto.numero().trim() : "S/N");
+        novoEndereco.setComplemento(dto.complemento() != null ? dto.complemento().trim() : "");
+        novoEndereco.setBairro(dto.bairro() != null && !dto.bairro().trim().isEmpty() ? dto.bairro().trim() : "Bairro Padrão");
+        novoEndereco.setCidade(dto.cidade() != null && !dto.cidade().trim().isEmpty() ? dto.cidade().trim() : "Cidade Padrão");
+        novoEndereco.setEstado(dto.estado() != null && !dto.estado().trim().isEmpty() ? dto.estado().trim() : "SP");
 
 
-        Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
+        Endereco enderecoSalvo = enderecoRepository.saveAndFlush(novoEndereco);
 
-        // Salva o pagamento
+
+        usuario.setEndereco(enderecoSalvo);
+        Usuario usuarioAtualizado = usuarioRepository.saveAndFlush(usuario);
+
+
         Pagamento pagamento = new Pagamento(
-                usuarioSalvo,
+                usuarioAtualizado,
                 dto.valor(),
                 dto.formaPagamento(),
                 "PAGO",
-                dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
+                dto.transactionId() != null && !dto.transactionId().isEmpty() ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
                 LocalDateTime.now()
         );
         pagamentoRepository.saveAndFlush(pagamento);
 
 
-        Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email).orElse(new Assinatura());
-        assinatura.setUsuario(usuarioSalvo);
+        Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email)
+                .orElse(new Assinatura());
+
+        assinatura.setUsuario(usuarioAtualizado);
         assinatura.setPlano(dto.plano());
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
@@ -81,16 +87,18 @@ public class AssinaturaService {
 
 
         Pedido novoPedido = new Pedido();
-        novoPedido.setUsuario(usuarioSalvo); // Referência direta síncrona
-        novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
-        novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
+        novoPedido.setUsuario(usuarioAtualizado);
+        novoPedido.setCodigoPedido(dto.transactionId() != null && !dto.transactionId().isEmpty() ? dto.transactionId() : "SP-" + System.currentTimeMillis());
+        novoPedido.setProdutoDescricao(dto.produtoDescricao() != null && !dto.produtoDescricao().isEmpty() ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
         novoPedido.setCodigoRastreio("RU" + (new Random().nextInt(90000000) + 10000000) + "BR");
         novoPedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
         novoPedido.setValorTotal(dto.valor());
 
+
         pedidoRepository.saveAndFlush(novoPedido);
     }
+
     public Assinatura obterAssinaturaPorEmail(String email) {
         return assinaturaRepository.findByUsuarioEmail(email)
                 .orElseThrow(() -> new RuntimeException("Nenhuma assinatura ativa encontrada para este usuário."));
