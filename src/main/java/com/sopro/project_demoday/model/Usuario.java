@@ -47,10 +47,10 @@ public class Usuario implements UserDetails {
     private RoleUsuario role = RoleUsuario.USUARIO;
 
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private Endereco endereco;
-
 
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
