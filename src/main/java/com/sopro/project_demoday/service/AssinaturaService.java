@@ -43,7 +43,7 @@ public class AssinaturaService {
 
 
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado para processamento do checkout."));
 
 
         Endereco endereco = usuario.getEndereco();
@@ -51,17 +51,28 @@ public class AssinaturaService {
             endereco = new Endereco();
         }
 
-        endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "00000-000");
-        endereco.setLogradouro("Logradouro Padrão Sopro");
-        endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
-        endereco.setComplemento(dto.complemento());
-        endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro Padrão");
-        endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade Padrão");
-        endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
+        // Se o DTO trouxer dados de endereço, popula. Caso contrário, e o usuário já possuir endereço, mantém.
+        if (dto.cep() != null && !dto.cep().isBlank()) {
+            endereco.setCep(dto.cep());
+            endereco.setLogradouro(dto.produtoDescricao() != null ? "Endereço de Entrega Sopro" : "Logradouro Padrão Sopro");
+            endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
+            endereco.setComplemento(dto.complemento());
+            endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro Padrão");
+            endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade Padrão");
+            endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
+        } else if (endereco.getCep() == null) {
+            // Fallback preventivo absoluto para não quebrar a restrição de NOT NULL do banco de dados
+            endereco.setCep("00000-000");
+            endereco.setLogradouro("Logradouro de Contingência");
+            endereco.setNumero("S/N");
+            endereco.setBairro("Centro");
+            endereco.setCidade("São Paulo");
+            endereco.setEstado("SP");
+        }
 
-
+        // Sincroniza bidirecionalmente a referência da relação e persiste o endereço primeiro
+        endereco.setUsuario(usuario);
         Endereco enderecoPersistido = enderecoRepository.saveAndFlush(endereco);
-
 
         usuario.setEndereco(enderecoPersistido);
         Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
@@ -96,10 +107,8 @@ public class AssinaturaService {
         novoPedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
         novoPedido.setValorTotal(dto.valor());
 
-
         pedidoRepository.saveAndFlush(novoPedido);
     }
-
 
     public Assinatura obterAssinaturaPorEmail(String email) {
         return assinaturaRepository.findByUsuarioEmail(email)
