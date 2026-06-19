@@ -39,6 +39,7 @@ public class UsuarioCadastroDTO {
         return nome;
     }
 
+    //set
     public void setNome(String nome) {
         this.nome = nome;
     }
