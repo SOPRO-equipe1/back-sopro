@@ -11,26 +11,26 @@ public class Endereco {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 9)
+
+    @Column(nullable = true, length = 9)
     private String cep;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String logradouro;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String numero;
 
     private String complemento;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String bairro;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String cidade;
 
-    @Column(nullable = false, length = 2)
+    @Column(nullable = true, length = 2)
     private String estado;
-
 
     @OneToOne(mappedBy = "endereco")
     @JsonIgnore

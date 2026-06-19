@@ -12,13 +12,14 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "codigo_pedido", nullable = false, unique = true)
+
+    @Column(name = "codigo_pedido", nullable = true, unique = true)
     private String codigoPedido;
 
-    @Column(name = "produto_descricao", nullable = false)
+    @Column(name = "produto_descricao", nullable = true)
     private String produtoDescricao;
 
-    @Column(name = "status_status", nullable = false)
+    @Column(name = "status_status", nullable = true)
     private String statusStatus;
 
     @Column(name = "codigo_rastreio")
@@ -27,7 +28,7 @@ public class Pedido {
     @Column(name = "data_entrega_prevista")
     private LocalDate dataEntregaPrevista;
 
-    @Column(name = "valor_total", nullable = false)
+    @Column(name = "valor_total", nullable = true)
     private BigDecimal valorTotal;
 
 
@@ -37,7 +38,6 @@ public class Pedido {
 
     public Pedido() {
     }
-
 
     public Long getId() {
         return id;
