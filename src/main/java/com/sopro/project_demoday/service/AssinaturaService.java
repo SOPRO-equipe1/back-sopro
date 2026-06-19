@@ -39,36 +39,36 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
-        //  Busca o usuário de forma limpa
+        //  Busca o usuário cadastrado
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado para processamento do checkout."));
 
-        //  Cria ou recupera o endereço isoladamente para evitar loops de persistência
-        Endereco endereco = usuario.getEndereco();
-        if (endereco == null) {
-            endereco = new Endereco();
+
+        if (dto.cep() != null && !dto.cep().isBlank()) {
+            Endereco endereco = usuario.getEndereco();
+            if (endereco == null) {
+                endereco = new Endereco();
+            }
+
+            endereco.setCep(dto.cep());
+            endereco.setLogradouro(dto.produtoDescricao() != null ? "Endereço de Entrega Sopro" : "Logradouro Padrão");
+            endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
+            endereco.setComplemento(dto.complemento());
+            endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro");
+            endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "Cidade");
+            endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
+
+            endereco.setUsuario(usuario);
+            endereco = enderecoRepository.saveAndFlush(endereco);
+
+            usuario.setEndereco(endereco);
+            usuario = usuarioRepository.saveAndFlush(usuario);
         }
 
-        // Popula com o que veio do DTO ou garante valores padrão
-        endereco.setCep(dto.cep() != null && !dto.cep().isBlank() ? dto.cep() : "01310-100");
-        endereco.setLogradouro(dto.produtoDescricao() != null ? "Avenida Paulista" : "Logradouro Padrão Sopro");
-        endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "1000");
-        endereco.setComplemento(dto.complemento() != null ? dto.complemento() : "Apto 12");
-        endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bela Vista");
-        endereco.setCidade(dto.cidade() != null && !dto.cidade().isBlank() ? dto.cidade() : "São Paulo");
-        endereco.setEstado(dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "SP");
 
-        // Salva o endereço de forma independente primeiro
-        endereco = enderecoRepository.saveAndFlush(endereco);
-
-        // Vincula de volta no usuário e atualiza
-        usuario.setEndereco(endereco);
-        Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
-
-        //  Registra o pagamento de forma direta
         Pagamento pagamento = new Pagamento(
-                usuarioSalvo,
-                dto.valor(),
+                usuario,
+                dto.valor() != null ? dto.valor() : java.math.BigDecimal.valueOf(200.97),
                 dto.formaPagamento() != null ? dto.formaPagamento().toUpperCase() : "PIX",
                 "PAGO",
                 dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
@@ -76,18 +76,18 @@ public class AssinaturaService {
         );
         pagamentoRepository.saveAndFlush(pagamento);
 
-        // Cria ou atualiza a assinatura
+
         Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email).orElse(new Assinatura());
-        assinatura.setUsuario(usuarioSalvo);
+        assinatura.setUsuario(usuario);
         assinatura.setPlano(dto.plano() != null ? dto.plano().toUpperCase() : "PRO");
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
         assinatura.setDataExpiracao(LocalDateTime.now().plusMonths(1));
         assinaturaRepository.saveAndFlush(assinatura);
 
-        //  Cria o Pedido forçando os vínculos corretos exigidos pelas constraints NOT NULL
+
         Pedido novoPedido = new Pedido();
-        novoPedido.setUsuario(usuarioSalvo);
+        novoPedido.setUsuario(usuario);
         novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
         novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
