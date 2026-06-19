@@ -105,13 +105,15 @@ public class PerfilService {
         }
 
         endereco.setCep(dto.cep() != null ? dto.cep() : "00000-000");
+        endereco.setLogradouro(dto.logradouro() != null ? dto.logradouro() : "Logradouro não informado"); // CORRIGIDO: campo que faltava
         endereco.setNumero(dto.numero() != null ? dto.numero() : "S/N");
         endereco.setComplemento(dto.complemento());
         endereco.setBairro(dto.bairro() != null ? dto.bairro() : "Bairro");
         endereco.setCidade(dto.cidade() != null ? dto.cidade() : "Cidade");
         endereco.setEstado(dto.estado() != null ? dto.estado() : "SP");
 
-        // SALVAMENTO
+
+        endereco.setUsuario(usuario);
         endereco = enderecoRepository.save(endereco);
 
         usuario.setEndereco(endereco);

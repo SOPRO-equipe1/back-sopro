@@ -3,7 +3,7 @@ package com.sopro.project_demoday.dto;
 import java.math.BigDecimal;
 
 public record CheckoutDTO(
-        //  Assinatura
+        // Assinatura
         String plano,
         BigDecimal valorPlano,
 
@@ -17,8 +17,8 @@ public record CheckoutDTO(
         String formaPagamento,
         String transactionId,
 
-        // Dados do endereço preenchidos na hora da compra
         String cep,
+        String logradouro,
         String numero,
         String complemento,
         String bairro,

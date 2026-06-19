@@ -39,7 +39,7 @@ public class AssinaturaService {
 
     @Transactional
     public void processarCheckout(String email, CheckoutDTO dto) {
-        //  Busca o usuário cadastrado
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado para processamento do checkout."));
 
@@ -51,7 +51,9 @@ public class AssinaturaService {
             }
 
             endereco.setCep(dto.cep());
-            endereco.setLogradouro(dto.produtoDescricao() != null ? "Endereço de Entrega Sopro" : "Logradouro Padrão");
+            // CORRIGIDO: usa o logradouro real enviado pelo front
+            endereco.setLogradouro(dto.logradouro() != null && !dto.logradouro().isBlank()
+                    ? dto.logradouro() : "Logradouro não informado");
             endereco.setNumero(dto.numero() != null && !dto.numero().isBlank() ? dto.numero() : "S/N");
             endereco.setComplemento(dto.complemento());
             endereco.setBairro(dto.bairro() != null && !dto.bairro().isBlank() ? dto.bairro() : "Bairro");
@@ -66,12 +68,16 @@ public class AssinaturaService {
         }
 
 
+
+        String transactionId = dto.transactionId() != null
+                ? dto.transactionId() : "SP-" + System.currentTimeMillis();
+
         Pagamento pagamento = new Pagamento(
                 usuario,
                 dto.valor() != null ? dto.valor() : java.math.BigDecimal.valueOf(200.97),
                 dto.formaPagamento() != null ? dto.formaPagamento().toUpperCase() : "PIX",
                 "PAGO",
-                dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis(),
+                transactionId,
                 LocalDateTime.now()
         );
         pagamentoRepository.saveAndFlush(pagamento);
@@ -79,7 +85,7 @@ public class AssinaturaService {
 
         Assinatura assinatura = assinaturaRepository.findByUsuarioEmail(email).orElse(new Assinatura());
         assinatura.setUsuario(usuario);
-        assinatura.setPlano(dto.plano() != null ? dto.plano().toUpperCase() : "PRO");
+        assinatura.setPlano(dto.plano() != null ? dto.plano().toUpperCase() : "DISPOSITIVO");
         assinatura.setStatus("ATIVO");
         assinatura.setDataInicio(LocalDateTime.now());
         assinatura.setDataExpiracao(LocalDateTime.now().plusMonths(1));
@@ -88,12 +94,14 @@ public class AssinaturaService {
 
         Pedido novoPedido = new Pedido();
         novoPedido.setUsuario(usuario);
-        novoPedido.setCodigoPedido(dto.transactionId() != null ? dto.transactionId() : "SP-" + System.currentTimeMillis());
-        novoPedido.setProdutoDescricao(dto.produtoDescricao() != null ? dto.produtoDescricao() : "1x Dispositivo Sopro");
+        novoPedido.setCodigoPedido(transactionId);
+        novoPedido.setProdutoDescricao(dto.produtoDescricao() != null
+                ? dto.produtoDescricao() : "1x Dispositivo Sopro");
         novoPedido.setStatusStatus("PREPARANDO");
         novoPedido.setCodigoRastreio("RU" + (new Random().nextInt(90000000) + 10000000) + "BR");
         novoPedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
-        novoPedido.setValorTotal(dto.valor() != null ? dto.valor() : java.math.BigDecimal.valueOf(200.97));
+        novoPedido.setValorTotal(dto.valor() != null
+                ? dto.valor() : java.math.BigDecimal.valueOf(200.97));
 
         pedidoRepository.saveAndFlush(novoPedido);
     }
