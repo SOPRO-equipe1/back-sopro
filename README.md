@@ -10,7 +10,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
 
 
-O **Sopro** é uma solução de tecnologia assistiva focada em devolver a autonomia de comunicação a indivíduos com mutismo ou limitações motoras severas. Esta API é o motor que gere a inteligência, a segurança e os dados por trás da plataforma, permitindo a conversão de inputs físicos em voz sintetizada e a gestão de perfis de utilizador.
+A **Sopro** é uma solução de tecnologia assistiva focada em devolver a autonomia de comunicação a indivíduos com mutismo ou limitações motoras severas. Esta API é o motor que gere a inteligência, a segurança e os dados por trás da plataforma, permitindo a conversão de inputs físicos em voz sintetizada e a gestão de perfis de utilizador.
 
 ```Se quiser ver uma documentação mais detalhada sobre a arquitetura:```
 
@@ -33,7 +33,7 @@ O projeto segue o padrão **MVC** (Model-View-Controller) para garantir a separa
 ```mermaid
 
 graph TD
-    %% Definição de Estilos Avançados
+    %% Definição de estilos avançados
     classDef azul fill:#1A53FF,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
     classDef roxo fill:#9333EA,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
     classDef verde fill:#30BD30,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
@@ -41,7 +41,7 @@ graph TD
     classDef preto fill:#1D252A,stroke:#FAFCFF,color:#FAFCFF,stroke-width:3px,font-weight:bold;
     classDef branco fill:#FAFCFF,stroke:#1D252A,color:#1D252A,stroke-width:3px,font-weight:bold;
 
-    %% Camada Cliente
+    %% Camada cliente
     subgraph Camada_Cliente ["Camada Cliente"]
         A[React Frontend / App Mobile]:::azul
     end
@@ -82,13 +82,13 @@ graph TD
         U[ConhecimentoRepository]:::preto
     end
 
-    %% Persistência & Motores Externos
+    %% Persistência & Motores externos
     subgraph Camada_Externos ["Persistência & Motores Externos"]
         V[(MySQL / PostgreSQL)]:::branco
         W[Google Gemini API]:::branco
     end
 
-    %% Fluxo de Conexões e Requisições
+    %% Fluxo de conexões e requisições
     A -->|1. Requisição HTTP + JWT| B
     B -->|2. Valida Token| C
     C -->|3. Encaminha Requisição| D & E & F & G & H & I
@@ -150,7 +150,7 @@ Identificou-se um comportamento de **Cold Start (Inicialização a Frio)** nas j
 
    </div>
 
-## Como Executar o projeto
+## Como executar o projeto
 
 ### 1. Pré-requisitos
  Java 21 instalado.
