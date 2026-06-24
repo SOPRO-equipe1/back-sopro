@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -19,14 +21,14 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
+      - name: Build with Maven (Produção)
+        run: mvn clean install -DskipTests
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: target/*.jar
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,15 +46,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_507E8D9442DC41D0971B359E2F8BA6EF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D3E2EF774C844D0BB171BDA0933CCA0E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5DDAB3DADF1541C1B3D304C9868C6A08 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_SOPRO }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_SOPRO }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_SOPRO }}
 
- 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'sopro-backend'
+          app-name: 'sopro-backend' # Nome do seu App Service na Conta de Estudante
           slot-name: 'Production'
-          package: '.'
+          package: '*.jar'
