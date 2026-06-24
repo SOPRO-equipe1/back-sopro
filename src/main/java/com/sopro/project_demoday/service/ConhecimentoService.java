@@ -15,9 +15,10 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    private final String apiUrl = "https://ollama.com/v1/chat/completions";
+    // Endpoint oficial do Google Gemini 1.5 Flash
+    private final String baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-    @Value("${OLLAMA_API_KEY:}")
+    @Value("${gemini.api.key:}")
     private String apiKey;
 
     @Autowired
@@ -35,12 +36,11 @@ public class ConhecimentoService {
         }
 
         if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
-            return "Erro: A chave OLLAMA_API_KEY não foi configurada no arquivo .env ou no ambiente.";
+            return "Erro: A chave GEMINI_API_KEY não foi configurada no ambiente do Azure.";
         }
 
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
-
 
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
                 "REGRAS CRÍTICAS DE CONTEXTO:\n" +
@@ -53,26 +53,32 @@ public class ConhecimentoService {
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
-        Map<String, String> messageSystem = Map.of("role", "system", "content", promptSistema);
-        Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
+        // Montando o payload estruturado para a API do Gemini
+        Map<String, Object> textPartSystem = Map.of("text", promptSistema);
+        Map<String, Object> textPartUser = Map.of("text", mensagemUsuario);
+
+        Map<String, Object> systemInstruction = Map.of("parts", List.of(textPartSystem));
+        Map<String, Object> userContent = Map.of("role", "user", "parts", List.of(textPartUser));
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
-        corpoRequisicao.put("model", "gpt-oss:120b");
-        corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
-        corpoRequisicao.put("temperature", 0.0);
+        corpoRequisicao.put("contents", List.of(userContent));
+        corpoRequisicao.put("systemInstruction", systemInstruction);
+
+        // Temperatura baixa garante respostas fidedignas ao contexto do banco
+        Map<String, Object> generationConfig = Map.of("temperature", 0.1);
+        corpoRequisicao.put("generationConfig", generationConfig);
 
         try {
             Map<?, ?> respostaRaw = restClient.post()
-                    .uri(apiUrl)
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri(baseUrl + "?key=" + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(corpoRequisicao)
                     .retrieve()
                     .body(Map.class);
 
-            return extrairTextoDoOllamaOss(respostaRaw);
+            return extrairTextoDoGemini(respostaRaw);
         } catch (Exception e) {
-            System.err.println("Alerta SOPRO: Instabilidade no Ollama remoto. Erro: " + e.getMessage());
+            System.err.println("Alerta SOPRO: Instabilidade no Gemini remoto. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
     }
@@ -119,21 +125,27 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoOllamaOss(Map<?, ?> respostaRaw) {
+    private String extrairTextoDoGemini(Map<?, ?> respostaRaw) {
         try {
-            if (respostaRaw != null && respostaRaw.containsKey("choices")) {
-                List<?> choices = (List<?>) respostaRaw.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<?, ?> firstChoice = (Map<?, ?>) choices.get(0);
-                    Map<?, ?> message = (Map<?, ?>) firstChoice.get("message");
-                    if (message != null && message.containsKey("content")) {
-                        return (String) message.get("content");
+            if (respostaRaw != null && respostaRaw.containsKey("candidates")) {
+                List<?> candidates = (List<?>) respostaRaw.get("candidates");
+                if (!candidates.isEmpty()) {
+                    Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
+                    Map<?, ?> content = (Map<?, ?>) firstCandidate.get("content");
+                    if (content != null && content.containsKey("parts")) {
+                        List<?> parts = (List<?>) content.get("parts");
+                        if (!parts.isEmpty()) {
+                            Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
+                            if (firstPart.containsKey("text")) {
+                                return (String) firstPart.get("text");
+                            }
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar o JSON de resposta da IA.";
+            return "Erro ao processar o JSON de resposta do Gemini.";
         }
-        return "A API do Ollama não retornou um texto válido.";
+        return "A API do Gemini não retornou um formato de texto válido.";
     }
 }

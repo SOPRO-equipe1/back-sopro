@@ -24,7 +24,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@CrossOrigin(origins = {"http://localhost:5174", "https://front-sopro2-pdox.vercel.app/perfil"})
+@CrossOrigin(origins = {"http://localhost:5174", "https://front-sopro2-pdox.vercel.app/perfil", "https://sopro-voz.com.br", "https://www.sopro-voz.com.br"})
 public class SecurityConfig {
 
     @Autowired
@@ -33,8 +33,7 @@ public class SecurityConfig {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private CorsConfigurationSource corsConfigurationSource;
+
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -70,7 +69,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                // Puxa o método explicitamente criado abaixo
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -78,24 +78,19 @@ public class SecurityConfig {
                         // ROTAS PÚBLICAS DO SWAGGER
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/cadastro").permitAll()
 
-
                         .requestMatchers(HttpMethod.POST, "/api/conhecimento/chat").permitAll()
-
 
                         .requestMatchers("/api/chatbot/**").permitAll()
                         .requestMatchers("/api/soprinho/**").permitAll()
                         .requestMatchers("/api/conhecimento/**").permitAll()
                         .requestMatchers("/api/assinaturas/**").permitAll()
 
-
                         .requestMatchers("/api/perfil/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("ADMIN")
-
 
                         .anyRequest().authenticated()
                 )
@@ -108,16 +103,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-
-        configuration.setAllowedOriginPatterns(List.of("*"));
-
+        // Mapeia os domínios reais de forma explícita, resolvendo a trava das credenciais!
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5174",
+                "https://front-sopro2-pdox.vercel.app",
+                "https://sopro-voz.com.br",
+                "https://www.sopro-voz.com.br"
+        ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Accept"));
-
-
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
