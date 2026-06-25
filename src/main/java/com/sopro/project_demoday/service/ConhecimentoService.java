@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-
     private final String baseUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
     @Value("${gemini.api.key:}")
@@ -53,18 +52,19 @@ public class ConhecimentoService {
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
-        // Montando o payload estruturado para a API do Gemini
+        // Montando a estrutura de partes aceita pelo modelo v1
         Map<String, Object> textPartSystem = Map.of("text", promptSistema);
         Map<String, Object> textPartUser = Map.of("text", mensagemUsuario);
 
-        Map<String, Object> systemInstruction = Map.of("parts", List.of(textPartSystem));
+        // Ajuste crucial: encapsulando em objetos mapeados para o padrão snake_case da API estável
+        Map<String, Object> systemInstructionObj = Map.of("parts", List.of(textPartSystem));
         Map<String, Object> userContent = Map.of("role", "user", "parts", List.of(textPartUser));
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
         corpoRequisicao.put("contents", List.of(userContent));
-        corpoRequisicao.put("systemInstruction", systemInstruction);
+        corpoRequisicao.put("system_instruction", systemInstructionObj); // Chave corrigida para o padrão /v1/
 
-        // Temperatura baixa garante respostas fidedignas ao contexto do banco
+        // Configuração de hiperparâmetros estável
         Map<String, Object> generationConfig = Map.of("temperature", 0.1);
         corpoRequisicao.put("generationConfig", generationConfig);
 
