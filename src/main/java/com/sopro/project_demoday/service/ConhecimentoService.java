@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    private final String baseUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
+    private final String baseUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
 
     @Value("${gemini.api.key:}")
     private String apiKey;
