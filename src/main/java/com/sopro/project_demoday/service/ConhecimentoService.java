@@ -41,7 +41,6 @@ public class ConhecimentoService {
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        // O segredo é consolidar as regras críticas e os dados reais juntos no topo do prompt
         String promptConsolidado = "INSTRUÇÕES DO SISTEMA:\n" +
                 "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
                 "REGRAS CRÍTICAS DE CONTEXTO:\n" +
@@ -49,13 +48,12 @@ public class ConhecimentoService {
                 "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, ou se você for tentar adivinhar, responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
                 "3. Nunca diga que o SOPRO mede poeira, qualidade do ar, odores, poluição ou temperatura. Ele é um dispositivo focado em comunicação assistiva.\n\n" +
                 "REGRAS DE FORMATAÇÃO:\n" +
-                "1. Responda APENAS em texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
+                "1. Responda APENAS in texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
                 "2. Traduza termos técnicos: em vez de 'sensor de pressão', use 'o medidor que sente o seu sopro'.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
                 "PERGUNTA DO USUÁRIO: " + mensagemUsuario;
 
-        // Payload super simples e universal: apenas a lista de contents, livre de erros de fields ocultos
         Map<String, Object> textPart = Map.of("text", promptConsolidado);
         Map<String, Object> userContent = Map.of("parts", List.of(textPart));
 
@@ -66,14 +64,15 @@ public class ConhecimentoService {
         corpoRequisicao.put("generationConfig", generationConfig);
 
         try {
-            Map<?, ?> respostaRaw = restClient.post()
+            // Captura o JSON de resposta como String estável, evitando falhas com o Jackson do Spring
+            String respostaRawJson = restClient.post()
                     .uri(baseUrl + "?key=" + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(corpoRequisicao)
                     .retrieve()
-                    .body(Map.class);
+                    .body(String.class);
 
-            return extrairTextoDoGemini(respostaRaw);
+            return extrairTextoDoGemini(respostaRawJson);
         } catch (Exception e) {
             System.err.println("Alerta SOPRO: Instabilidade no Gemini remoto. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
@@ -122,19 +121,20 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoGemini(Map<?, ?> respostaRaw) {
+    private String extrairTextoDoGemini(String jsonString) {
         try {
-            if (respostaRaw != null && respostaRaw.containsKey("candidates")) {
-                List<?> candidates = (List<?>) respostaRaw.get("candidates");
-                if (!candidates.isEmpty()) {
-                    Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
-                    Map<?, ?> content = (Map<?, ?>) firstCandidate.get("content");
-                    if (content != null && content.containsKey("parts")) {
-                        List<?> parts = (List<?>) content.get("parts");
-                        if (!parts.isEmpty()) {
-                            Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
-                            if (firstPart.containsKey("text")) {
-                                return (String) firstPart.get("text");
+            // Deserialização segura utilizando a árvore estruturada do Gson
+            com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonString).getAsJsonObject();
+            if (jsonObject.has("candidates")) {
+                com.google.gson.JsonArray candidates = jsonObject.getAsJsonArray("candidates");
+                if (candidates.size() > 0) {
+                    com.google.gson.JsonObject firstCandidate = candidates.get(0).getAsJsonObject();
+                    if (firstCandidate.has("content")) {
+                        com.google.gson.JsonObject content = firstCandidate.getAsJsonObject("content");
+                        if (content.has("parts")) {
+                            com.google.gson.JsonArray parts = content.getAsJsonArray("parts");
+                            if (parts.size() > 0) {
+                                return parts.get(0).getAsJsonObject().get("text").getAsString();
                             }
                         }
                     }
