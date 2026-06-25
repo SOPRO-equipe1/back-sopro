@@ -41,7 +41,9 @@ public class ConhecimentoService {
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
+        // O segredo é consolidar as regras críticas e os dados reais juntos no topo do prompt
+        String promptConsolidado = "INSTRUÇÕES DO SISTEMA:\n" +
+                "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
                 "REGRAS CRÍTICAS DE CONTEXTO:\n" +
                 "1. Baseie sua resposta UNICAMENTE nos dados reais fornecidos abaixo. É PROIBIDO inventar fatos, utilidades, sensores ou funções para o dispositivo.\n" +
                 "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, ou se você for tentar adivinhar, responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
@@ -50,21 +52,16 @@ public class ConhecimentoService {
                 "1. Responda APENAS em texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
                 "2. Traduza termos técnicos: em vez de 'sensor de pressão', use 'o medidor que sente o seu sopro'.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
-                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
+                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"\n\n" +
+                "PERGUNTA DO USUÁRIO: " + mensagemUsuario;
 
-        // Montando a estrutura de partes aceita pelo modelo v1
-        Map<String, Object> textPartSystem = Map.of("text", promptSistema);
-        Map<String, Object> textPartUser = Map.of("text", mensagemUsuario);
-
-        // Ajuste crucial: encapsulando em objetos mapeados para o padrão snake_case da API estável
-        Map<String, Object> systemInstructionObj = Map.of("parts", List.of(textPartSystem));
-        Map<String, Object> userContent = Map.of("role", "user", "parts", List.of(textPartUser));
+        // Payload super simples e universal: apenas a lista de contents, livre de erros de fields ocultos
+        Map<String, Object> textPart = Map.of("text", promptConsolidado);
+        Map<String, Object> userContent = Map.of("parts", List.of(textPart));
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
         corpoRequisicao.put("contents", List.of(userContent));
-        corpoRequisicao.put("system_instruction", systemInstructionObj); // Chave corrigida para o padrão /v1/
 
-        // Configuração de hiperparâmetros estável
         Map<String, Object> generationConfig = Map.of("temperature", 0.1);
         corpoRequisicao.put("generationConfig", generationConfig);
 
