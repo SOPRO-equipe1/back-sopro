@@ -115,7 +115,12 @@ graph TD
 
 ```
   
-
+> <details>
+> <summary>Fluxo Cloud</summary>
+>   
+> ![img](docs/driagrams/Azure.jpg)
+> 
+> </details>
 
 
 ## DER
