@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    private final String baseUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
 
-    @Value("${gemini.api.key:}")
+    @Value("${ollama.api.url:http://thomas.proxy.rlwy.net:19693}")
+    private String olllamaBaseUrl;
+
+    @Value("${ollama.api.key:}")
     private String apiKey;
 
     @Autowired
@@ -35,47 +37,52 @@ public class ConhecimentoService {
         }
 
         List<Conhecimento> todosConhecimentos = repository.findAll();
+        String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        // Tenta chamar o Gemini, se falhar ou der 404, a contingência assume sem quebrar a tela!
+        String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
+                "REGRAS CRÍTICAS DE CONTEXTO:\n" +
+                "1. Baseie sua resposta UNICAMENTE nos dados reais fornecidos abaixo. É PROIBIDO inventar fatos, utilidades, sensores ou funções para o dispositivo.\n" +
+                "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
+                "3. Nunca diga que o SOPRO mede poeira, qualidade do ar ou temperatura. Ele é um dispositivo focado em comunicação assistiva.\n\n" +
+                "REGRAS DE FORMATAÇÃO:\n" +
+                "1. Responda APENAS em texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
+                "2. Traduza termos técnicos: em vez de 'sensor de pressão', use 'o medidor que sente o seu sopro'.\n\n" +
+                "DADOS REAIS DO PROJETO SOPRO:\n" +
+                "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
+
+        // Monta a estrutura padrão de Chat do Ollama (padrão OpenAI)
+        Map<String, Object> systemMessage = Map.of("role", "system", "content", promptSistema);
+        Map<String, Object> userMessage = Map.of("role", "user", "content", mensagemUsuario);
+
+        Map<String, Object> corpoRequisicao = new HashMap<>();
+        corpoRequisicao.put("model", "llama3");
+        corpoRequisicao.put("messages", List.of(systemMessage, userMessage));
+        corpoRequisicao.put("temperature", 0.1);
+
+        // Constrói o endpoint completo adicionando a rota de chat do Ollama
+        String urlCompleta = olllamaBaseUrl.endsWith("/") ? olllamaBaseUrl + "v1/chat/completions" : olllamaBaseUrl + "/v1/chat/completions";
+
         try {
-            if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
-                throw new IllegalStateException("Chave ausente");
+            RestClient.RequestBodySpec requestSpec = restClient.post()
+                    .uri(urlCompleta)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(corpoRequisicao);
+
+            if (this.apiKey != null && !this.apiKey.trim().isEmpty()) {
+                requestSpec.header("Authorization", "Bearer " + apiKey);
             }
 
-            String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
-
-            String promptConsolidado = "INSTRUÇÕES DO SISTEMA:\n" +
-                    "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
-                    "REGRAS CRÍTICAS DE CONTEXTO:\n" +
-                    "1. Baseie sua resposta UNICAMENTE nos dados reais fornecidos abaixo.\n" +
-                    "2. Nunca diga que o SOPRO mede poeira, qualidade do ar ou temperatura.\n\n" +
-                    "DADOS REAIS DO PROJETO SOPRO:\n" + dadosFiltradosDoBanco + "\n\n" +
-                    "PERGUNTA DO USUÁRIO: " + mensagemUsuario;
-
-            Map<String, Object> textPart = Map.of("text", promptConsolidado);
-            Map<String, Object> userContent = Map.of("parts", List.of(textPart));
-            Map<String, Object> corpoRequisicao = new HashMap<>();
-            corpoRequisicao.put("contents", List.of(userContent));
-
-            String respostaRawJson = restClient.post()
-                    .uri(baseUrl + "?key=" + apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(corpoRequisicao)
-                    .retrieve()
-                    .body(String.class);
-
-            return extrairTextoDoGemini(respostaRawJson);
+            String respostaRawJson = requestSpec.retrieve().body(String.class);
+            return extrairTextoDoOllama(respostaRawJson);
 
         } catch (Exception e) {
-            System.err.println("Alerta SOPRO: Ativando Contingência Avançada para o DemoDay. Erro original: " + e.getMessage());
+            System.err.println("Alerta SOPRO: Instabilidade no Ollama. Ativando contingência local. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
     }
 
     private String gerarRespostaDeContingenciaLocal(List<Conhecimento> base, String perguntaUsuario) {
         String perguntaMin = perguntaUsuario.toLowerCase();
-
-        // Procura no banco se a pergunta bate com o título ou com alguma tag nos metadados
         for (Conhecimento c : base) {
             String tituloMin = c.getTitulo().toLowerCase();
             if (perguntaMin.contains(tituloMin) || tituloMin.contains(perguntaMin)) {
@@ -90,11 +97,7 @@ public class ConhecimentoService {
                 }
             }
         }
-
-        // Se o jurado perguntar algo genérico ou fora do script, o Soprinho responde com carinho
-        return "Olá! 💙 No momento, o nosso protótipo do SOPRO está em fase de validação para a banca do DemoDay! " +
-                "O nosso dispositivo é focado em comunicação assistiva, utilizando sensores de sopro e processamento inteligente para devolver a autonomia a quem precisa. " +
-                "O que mais você gostaria de saber sobre o nosso projeto?";
+        return "Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
@@ -126,27 +129,24 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoGemini(String jsonString) {
+    private String extrairTextoDoOllama(String jsonString) {
         try {
             com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonString).getAsJsonObject();
-            if (jsonObject.has("candidates")) {
-                com.google.gson.JsonArray candidates = jsonObject.getAsJsonArray("candidates");
-                if (candidates.size() > 0) {
-                    com.google.gson.JsonObject firstCandidate = candidates.get(0).getAsJsonObject();
-                    if (firstCandidate.has("content")) {
-                        com.google.gson.JsonObject content = firstCandidate.getAsJsonObject("content");
-                        if (content.has("parts")) {
-                            com.google.gson.JsonArray parts = content.getAsJsonArray("parts");
-                            if (parts.size() > 0) {
-                                return parts.get(0).getAsJsonObject().get("text").getAsString();
-                            }
+            if (jsonObject.has("choices")) {
+                com.google.gson.JsonArray choices = jsonObject.getAsJsonArray("choices");
+                if (choices.size() > 0) {
+                    com.google.gson.JsonObject firstChoice = choices.get(0).getAsJsonObject();
+                    if (firstChoice.has("message")) {
+                        com.google.gson.JsonObject message = firstChoice.getAsJsonObject("message");
+                        if (message.has("content")) {
+                            return message.get("content").getAsString();
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar o JSON de resposta do Gemini.";
+            return "Erro ao processar a resposta do motor local.";
         }
-        return "A API do Gemini não retornou um formato de texto válido.";
+        return "Formato de resposta inválido do motor de IA.";
     }
 }
