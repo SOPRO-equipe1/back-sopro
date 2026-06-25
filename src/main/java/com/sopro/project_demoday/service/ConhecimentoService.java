@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-
     @Value("${ollama.api.url:http://thomas.proxy.rlwy.net:19693}")
     private String olllamaBaseUrl;
 
@@ -42,7 +41,7 @@ public class ConhecimentoService {
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
                 "REGRAS CRÍTICAS DE CONTEXTO:\n" +
                 "1. Baseie sua resposta UNICAMENTE nos dados reais fornecidos abaixo. É PROIBIDO inventar fatos, utilidades, sensores ou funções para o dispositivo.\n" +
-                "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
+                "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, ou se for um assunto completamente fora do escopo do projeto (como receitas, piadas ou culinária), responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
                 "3. Nunca diga que o SOPRO mede poeira, qualidade do ar ou temperatura. Ele é um dispositivo focado em comunicação assistiva.\n\n" +
                 "REGRAS DE FORMATAÇÃO:\n" +
                 "1. Responda APENAS em texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
@@ -102,16 +101,16 @@ public class ConhecimentoService {
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
         String perguntaMin = pergunta.toLowerCase();
+
         List<Conhecimento> filtrados = base.stream()
                 .filter(c -> c.getTitulo().toLowerCase().contains(perguntaMin) ||
                         perguntaMin.contains(c.getTitulo().toLowerCase()) ||
                         (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
                 .collect(Collectors.toList());
 
+        // CORREÇÃO CRÍTICA: Se for um assunto totalmente aleatório, não injeta contextos institucionais padrão
         if (filtrados.isEmpty()) {
-            filtrados = base.stream()
-                    .filter(c -> c.getMetadados().contains("institucional") || c.getMetadados().contains("tecnico"))
-                    .collect(Collectors.toList());
+            return "Nenhum dado correspondente encontrado para esta pergunta específica.";
         }
 
         return filtrados.stream()
