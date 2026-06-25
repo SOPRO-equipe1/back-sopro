@@ -115,9 +115,10 @@ graph TD
 
 ```
   
- <details>
+> <details>
 > <summary>Fluxo Cloud</summary>
->[!]()
+>   
+> ![img](docs/driagrams/Azure.jpg)
 > 
 > </details>
 
