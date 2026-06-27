@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    @Value("${ollama.api.url:http://thomas.proxy.rlwy.net:19693}")
+    @Value("${ollama.api.url:https://thomas.proxy.rlwy.net:19693}")
     private String olllamaBaseUrl;
 
     @Value("${ollama.api.key:}")
