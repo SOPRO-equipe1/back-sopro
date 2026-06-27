@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    @Value("${ollama.api.url:https://thomas.proxy.rlwy.net:19693}")
-    private String olllamaBaseUrl;
+    // Restaurado o endpoint original do vosso projeto
+    private final String apiUrl = "https://ollama.com/v1/chat/completions";
 
-    @Value("${ollama.api.key:}")
+    @Value("${OLLAMA_API_KEY:}")
     private String apiKey;
 
     @Autowired
@@ -35,47 +35,48 @@ public class ConhecimentoService {
             return "Olá! 😊 Por favor, envie uma mensagem válida para que eu possa te ajudar.";
         }
 
+        if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
+            return "Erro: A chave OLLAMA_API_KEY não foi configurada no arquivo .env ou no ambiente.";
+        }
+
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
-        String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO.\n\n" +
-                "REGRAS CRÍTICAS DE CONTEXTO:\n" +
-                "1. Baseie sua resposta UNICAMENTE nos dados reais fornecidos abaixo. É PROIBIDO inventar fatos, utilidades, sensores ou funções para o dispositivo.\n" +
-                "2. Se o usuário perguntar algo que não está explicitamente respondido nos dados abaixo, ou se for um assunto completamente fora do escopo do projeto (como receitas, piadas ou culinária), responda EXATAMENTE com o texto: \"Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!\"\n" +
-                "3. Nunca diga que o SOPRO mede poeira, qualidade do ar ou temperatura. Ele é um dispositivo focado em comunicação assistiva.\n\n" +
-                "REGRAS DE FORMATAÇÃO:\n" +
-                "1. Responda APENAS em texto corrido e parágrafos normais. É PROIBIDO usar asteriscos ou marcações Markdown.\n" +
-                "2. Traduza termos técnicos: em vez de 'sensor de pressão', use 'o medidor que sente o seu sopro'.\n\n" +
+        String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO. " +
+                "Seu papel é responder perguntas de forma extremamente acolhedora, empática, clara e humanizada. Use emojis de forma sutil (como 😊, ✨, 💙).\n\n" +
+                "REGRAS CRÍTICAS DE FORMATAÇÃO DA RESPOSTA:\n" +
+                "1. Responda APENAS em texto corrido e parágrafos normais.\n" +
+                "2. É TOTALMENTE PROIBIDO usar asteriscos (como **texto**) ou qualquer outra marcação Markdown.\n" +
+                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se o usuário perguntar sobre assuntos que NÃO estão nos dados abaixo (como programação, Java, piadas, culinária, receitas ou qualquer assunto Geral), responda com muito carinho que você é o assistente do SOPRO e só sabe conversar sobre este projeto. Se a informação não estiver presente de forma explícita, explique que o protótipo está em fase de validação para o Demo Day.\n\n"+
+                "4. É TOTALMENTE PROIBIDO usar termos técnicos, jargões de engenharia, códigos ou nomes complexos de componentes que venham do banco de dados. Você deve traduzir essas informações para o usuário usando analogias simples e termos do dia a dia (por exemplo, em vez de 'sensor de fluxo de massa de ar', use 'o medidor que sente o ar passar').\n\n" +
+                "DIRETRIZES CRÍTICAS DE SEGURANÇA E CONTEXTO:\n" +
+                "1. O usuário JÁ ESTÁ navegando na nossa página oficial. Nunca diga para ele 'acessar o site oficial'. Oriente-o a acompanhar as novidades por aqui mesmo.\n" +
+                "2. O projeto SOPRO NÃO possui newsletter, NÃO possui e-mails de contato externos e NÃO possui formulários em outros locais.\n" +
+                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se a informação não estiver presente de forma explícita, explique com carinho que o protótipo está em fase de validação para o Demo Day.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
-
-        Map<String, Object> systemMessage = Map.of("role", "system", "content", promptSistema);
-        Map<String, Object> userMessage = Map.of("role", "user", "content", mensagemUsuario);
+        Map<String, String> messageSystem = Map.of("role", "system", "content", promptSistema);
+        Map<String, String> messageUser = Map.of("role", "user", "content", mensagemUsuario);
 
         Map<String, Object> corpoRequisicao = new HashMap<>();
-        corpoRequisicao.put("model", "llama3");
-        corpoRequisicao.put("messages", List.of(systemMessage, userMessage));
-        corpoRequisicao.put("temperature", 0.1);
-
-
-        String urlCompleta = olllamaBaseUrl.endsWith("/") ? olllamaBaseUrl + "v1/chat/completions" : olllamaBaseUrl + "/v1/chat/completions";
+        corpoRequisicao.put("model", "gpt-oss:120b");
+        corpoRequisicao.put("messages", List.of(messageSystem, messageUser));
+        corpoRequisicao.put("temperature", 0.0);
 
         try {
-            RestClient.RequestBodySpec requestSpec = restClient.post()
-                    .uri(urlCompleta)
+            // Captura o JSON bruto para evitar incompatibilidades de Parser do Spring
+            String respostaRawJson = restClient.post()
+                    .uri(apiUrl)
+                    .header("Authorization", "Bearer " + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(corpoRequisicao);
+                    .body(corpoRequisicao)
+                    .retrieve()
+                    .body(String.class);
 
-            if (this.apiKey != null && !this.apiKey.trim().isEmpty()) {
-                requestSpec.header("Authorization", "Bearer " + apiKey);
-            }
-
-            String respostaRawJson = requestSpec.retrieve().body(String.class);
-            return extrairTextoDoOllama(respostaRawJson);
-
+            return extrairTextoDoOllamaOss(respostaRawJson);
         } catch (Exception e) {
-            System.err.println("Alerta SOPRO: Instabilidade no Ollama. Ativando contingência local. Erro: " + e.getMessage());
+            System.err.println("Alerta SOPRO: Instabilidade no Ollama remoto. Ativando contingência local. Erro: " + e.getMessage());
             return gerarRespostaDeContingenciaLocal(todosConhecimentos, mensagemUsuario);
         }
     }
@@ -84,17 +85,12 @@ public class ConhecimentoService {
         String perguntaMin = perguntaUsuario.toLowerCase();
 
         for (Conhecimento c : base) {
-            if (c.getTitulo() == null || c.getTitulo().trim().isEmpty()) {
-                continue;
-            }
-
+            if (c.getTitulo() == null || c.getTitulo().trim().isEmpty()) continue;
             String tituloMin = c.getTitulo().toLowerCase();
-
 
             if (perguntaMin.contains(tituloMin) && tituloMin.length() > 3) {
                 return c.getConteudo();
             }
-
             if (c.getMetadados() != null) {
                 for (String tag : c.getMetadados().split(",")) {
                     String tagLimpa = tag.trim().toLowerCase();
@@ -104,23 +100,19 @@ public class ConhecimentoService {
                 }
             }
         }
-
-
-        return "Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay. O SOPRO é um dispositivo de comunicação assistiva focado em devolver autonomia através do sopro. Como posso te ajudar com o projeto hoje?";
+        return "Olá! 💙 No momento, o nosso protótipo está em fase de validação para o Demo Day e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
         String perguntaMin = pergunta.toLowerCase();
-
         List<Conhecimento> filtrados = base.stream()
                 .filter(c -> c.getTitulo().toLowerCase().contains(perguntaMin) ||
                         perguntaMin.contains(c.getTitulo().toLowerCase()) ||
                         (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
                 .collect(Collectors.toList());
 
-
         if (filtrados.isEmpty()) {
-            return "Nenhum dado correspondente encontrado para esta pergunta específica.";
+            return "Nenhum dado correspondente encontrado para esta pergunta.";
         }
 
         return filtrados.stream()
@@ -138,7 +130,7 @@ public class ConhecimentoService {
         return false;
     }
 
-    private String extrairTextoDoOllama(String jsonString) {
+    private String extrairTextoDoOllamaOss(String jsonString) {
         try {
             com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonString).getAsJsonObject();
             if (jsonObject.has("choices")) {
@@ -154,8 +146,8 @@ public class ConhecimentoService {
                 }
             }
         } catch (Exception e) {
-            return "Erro ao processar a resposta do motor local.";
+            return "Erro ao processar o JSON de resposta da IA.";
         }
-        return "Formato de resposta inválido do motor de IA.";
+        return "A API do Ollama não retornou um texto válido.";
     }
 }
