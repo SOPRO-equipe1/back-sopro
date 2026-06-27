@@ -49,7 +49,7 @@ public class ConhecimentoService {
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
-        // Monta a estrutura padrão de Chat do Ollama (padrão OpenAI)
+
         Map<String, Object> systemMessage = Map.of("role", "system", "content", promptSistema);
         Map<String, Object> userMessage = Map.of("role", "user", "content", mensagemUsuario);
 
@@ -58,7 +58,7 @@ public class ConhecimentoService {
         corpoRequisicao.put("messages", List.of(systemMessage, userMessage));
         corpoRequisicao.put("temperature", 0.1);
 
-        // Constrói o endpoint completo adicionando a rota de chat do Ollama
+
         String urlCompleta = olllamaBaseUrl.endsWith("/") ? olllamaBaseUrl + "v1/chat/completions" : olllamaBaseUrl + "/v1/chat/completions";
 
         try {
@@ -82,21 +82,31 @@ public class ConhecimentoService {
 
     private String gerarRespostaDeContingenciaLocal(List<Conhecimento> base, String perguntaUsuario) {
         String perguntaMin = perguntaUsuario.toLowerCase();
+
         for (Conhecimento c : base) {
+            if (c.getTitulo() == null || c.getTitulo().trim().isEmpty()) {
+                continue;
+            }
+
             String tituloMin = c.getTitulo().toLowerCase();
-            if (perguntaMin.contains(tituloMin) || tituloMin.contains(perguntaMin)) {
+
+
+            if (perguntaMin.contains(tituloMin) && tituloMin.length() > 3) {
                 return c.getConteudo();
             }
+
             if (c.getMetadados() != null) {
                 for (String tag : c.getMetadados().split(",")) {
                     String tagLimpa = tag.trim().toLowerCase();
-                    if (!tagLimpa.isEmpty() && perguntaMin.contains(tagLimpa)) {
+                    if (!tagLimpa.isEmpty() && perguntaMin.contains(tagLimpa) && tagLimpa.length() > 2) {
                         return c.getConteudo();
                     }
                 }
             }
         }
-        return "Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay e eu ainda não tenho essa resposta. Continue acompanhando as novidades por aqui mesmo!";
+
+
+        return "Olá! 💙 No momento, o nosso protótipo está em fase de validação para o DemoDay. O SOPRO é um dispositivo de comunicação assistiva focado em devolver autonomia através do sopro. Como posso te ajudar com o projeto hoje?";
     }
 
     private String filtrarContextoRelevante(List<Conhecimento> base, String pergunta) {
@@ -108,7 +118,7 @@ public class ConhecimentoService {
                         (c.getMetadados() != null && verificarTags(c.getMetadados(), perguntaMin)))
                 .collect(Collectors.toList());
 
-        // CORREÇÃO CRÍTICA: Se for um assunto totalmente aleatório, não injeta contextos institucionais padrão
+
         if (filtrados.isEmpty()) {
             return "Nenhum dado correspondente encontrado para esta pergunta específica.";
         }
