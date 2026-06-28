@@ -1,10 +1,8 @@
 package com.sopro.project_demoday.service;
 
-import com.azure.core.credential.TokenCredential;
-import com.azure.core.management.AzureEnvironment;
-import com.azure.core.management.profile.AzureProfile;
-import com.azure.identity.DefaultAzureCredentialBuilder;
-import com.azure.resourcemanager.AzureResourceManager;
+import com.microsoft.azure.AzureEnvironment;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
+import com.microsoft.azure.management.Azure;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +15,16 @@ public class AzureAuthService {
     @Value("${azure.subscription.id}")
     private String subscriptionId;
 
-    public AzureResourceManager getAzureClient() {
-        TokenCredential credential = new DefaultAzureCredentialBuilder().build();
-        AzureProfile profile = new AzureProfile(tenantId, subscriptionId, AzureEnvironment.AZURE);
 
-        return AzureResourceManager.configure()
-                .authenticate(credential, profile)
+    private String clientId = System.getenv("AZURE_CLIENT_ID");
+    private String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
+
+    public Azure getAzureClient() {
+        ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
+                clientId, tenantId, clientSecret, AzureEnvironment.AZURE);
+
+        return Azure.configure()
+                .authenticate(credentials)
                 .withSubscription(subscriptionId);
     }
 }

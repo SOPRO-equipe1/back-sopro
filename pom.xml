@@ -31,6 +31,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -135,20 +136,14 @@
 		</dependency>
 
 
+
+
 			<!-- SDK de Gerenciamento de Recursos do Azure -->
-			<dependency>
-				<groupId>com.azure.resourcemanager</groupId>
-				<artifactId>azure-resourcemanager</artifactId>
-				<version>2.34.0</version>
-			</dependency>
-
-			<!-- Identidade do Azure para autenticação local e em nuvem -->
-			<dependency>
-				<groupId>com.azure</groupId>
-				<artifactId>azure-identity</artifactId>
-				<version>1.11.0</version>
-			</dependency>
-
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>azure</artifactId>
+			<version>1.41.4</version>
+		</dependency>
 	</dependencies>
 
 

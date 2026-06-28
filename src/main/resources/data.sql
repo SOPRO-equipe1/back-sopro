@@ -42,5 +42,5 @@ INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
 
 -- ====== SEÇÃO 3: HARDWARE E TECNOLOGIA ======
 
-INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
-('Como funciona a tecnologia', 'O nosso aparelho tem um medidor interno muito sensível que percebe a força do sopro da pessoa. Uma inteligência artificial
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Como funciona a tecnologia', 'O nosso aparelho tem um medidor interno muito sensível que percebe a força do sopro da pessoa. Uma inteligência artificial traduz essa pressão de ar em comandos verbais sintetizados.', 'hardware, tecnologia, como funciona, sensor, medidor, sopro, funcionamento');
