@@ -169,7 +169,7 @@ O módulo monitora proativamente os grupos de recursos da Azure por meio de gati
 
 ### 📊 Exemplo prático (Retorno da API)
 
-![AZ]()
+![AZ](docs/driagrams/FinOps.png)
 
    </div>
 
