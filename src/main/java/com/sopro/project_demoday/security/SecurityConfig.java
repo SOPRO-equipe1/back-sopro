@@ -24,7 +24,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@CrossOrigin(origins = {"http://localhost:5174", "https://front-sopro2-pdox.vercel.app/perfil", "https://sopro-voz.com.br", "https://www.sopro-voz.com.br"})
+@CrossOrigin(origins = {"http://localhost:5173", "https://front-sopro2-pdox.vercel.app/perfil", "https://sopro-voz.com.br", "https://www.sopro-voz.com.br"})
 public class SecurityConfig {
 
     @Autowired
