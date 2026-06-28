@@ -157,15 +157,15 @@ Identificou-se um comportamento de **Cold Start (Inicialização a Frio)** nas j
 
 O projeto **Sopro** conta com um ecossistema integrado de **FinOps (Cloud Financial Operations)** desenvolvido nativamente no backend em Spring Boot. O objetivo principal deste módulo é aplicar políticas de governança automatizada sobre a infraestrutura em nuvem, eliminando o desperdício financeiro gerado por recursos ociosos fora do horário comercial.
 
-### 🔍 O problema: Desperdício em ambientes de desenvolvimento
+### O problema: Desperdício em ambientes de desenvolvimento
 Durante os ciclos de testes, microsserviços e APIs de ambientes de desenvolvimento (ex: `sopro-api-dev` e `sopro-web-dev`) costumam permanecer ativos de forma ininterrupta (24/7), mesmo em períodos de total inatividade, como madrugadas e finais de semana. 
 
-### 🛠️ A solução: varredura automatizada & inteligência de infraestrutura
+###  A solução: varredura automatizada & inteligência de infraestrutura
 O módulo monitora proativamente os grupos de recursos da Azure por meio de gatilhos temporais agendados (`@Scheduled` via CRON expressions) e requisições sob demanda.
 
-1. **Filtro por tags de governança**: O sistema varre os Resource Groups buscando recursos tagueados estritamente com as chaves `Environment: Development` ou `Environment: Test`.
-2. **Desalocação**: Ao interceptar instâncias ativas fora do horário operacional, o backend dispara chamadas assíncronas via SDK para interromper o ciclo de vida do recurso operacional (`webApp.stop()`), reduzindo o consumo de processamento de nuvem a **zero**.
-3. **Métricas de saving financeiro**: A API calcula instantaneamente a projeção matemática de economia gerada pela interrupção nas janelas de ociosidade (estimando um impacto de redução de custos fixos por hora por máquina alocada) e retorna relatórios estruturados de auditoria para o negócio.
+ **Filtro por tags de governança**: O sistema varre os Resource Groups buscando recursos tagueados estritamente com as chaves `Environment: Development` ou `Environment: Test`.
+ **Desalocação**: Ao interceptar instâncias ativas fora do horário operacional, o backend dispara chamadas assíncronas via SDK para interromper o ciclo de vida do recurso operacional (`webApp.stop()`), reduzindo o consumo de processamento de nuvem a **zero**.
+ **Métricas de saving financeiro**: A API calcula instantaneamente a projeção matemática de economia gerada pela interrupção nas janelas de ociosidade (estimando um impacto de redução de custos fixos por hora por máquina alocada) e retorna relatórios estruturados de auditoria para o negócio.
 
 ### 📊 Exemplo prático (Retorno da API)
 
