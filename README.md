@@ -118,7 +118,7 @@ graph TD
 > <details>
 > <summary>Fluxo Cloud</summary>
 >   
-> ![img](docs/driagrams/Azure.jpg)
+> ![img](docs/driagrams/diagramaSyst.png)
 > 
 > </details>
 
