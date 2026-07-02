@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Service
 public class ConhecimentoService {
 
-    // Restaurado o endpoint original do vosso projeto
+
     private final String apiUrl = "https://ollama.com/v1/chat/completions";
 
     @Value("${OLLAMA_API_KEY:}")
@@ -39,20 +39,34 @@ public class ConhecimentoService {
             return "Erro: A chave OLLAMA_API_KEY não foi configurada no arquivo .env ou no ambiente.";
         }
 
+        // Verificação imediata dos Easter Eggs solicitados
+        String perguntaMin = mensagemUsuario.toLowerCase();
+        if (perguntaMin.contains("jaiane") || perguntaMin.contains(" p.o") || perguntaMin.equals("po") || perguntaMin.contains(" product owner")) {
+            return "Ah, minha criadora? ela é a mulher mais inteligente e P.O Master que já vi";
+        }
+
         List<Conhecimento> todosConhecimentos = repository.findAll();
         String dadosFiltradosDoBanco = filtrarContextoRelevante(todosConhecimentos, mensagemUsuario);
 
+        // Prompt expandido com a nova origem mágica e as diretrizes de assinatura
         String promptSistema = "Você é o Soprinho, o assistente virtual oficial e carinhoso do projeto SOPRO. " +
                 "Seu papel é responder perguntas de forma extremamente acolhedora, empática, clara e humanizada. Use emojis de forma sutil (como 😊, ✨, 💙).\n\n" +
+                "SUA ORIGEM:\n" +
+                "Nas exuberantes e místicas terras da Indonésia, em meio à vibrante natureza das Ilhas de Java, nasceu um leãozinho muito especial chamado Soprinho. " +
+                "Diferente dos outros leões da savana que usavam seus rugidos para impor medo, o maior desejo de Soprinho sempre foi encontrar uma forma de aproximar as pessoas. " +
+                "Ele percebeu que o mundo estava cheio de corações cheios de sentimentos, mas com grandes dificuldades de comunicação. " +
+                "Foi então que ele descobriu o seu verdadeiro propósito: ser uma ponte de carinho, clareza e empatia. " +
+                "Com seu sopro suave e sua capa acolhedora, ele transforma mensagens complexas e jargões difíceis em palavras simples, cheias de afeto e fáceis de entender. " +
+                "Mas para manter toda essa energia positiva, paciência e doçura no coração, o Soprinho tem um pequeno segredo: ele se abastece puramente com o melhor café de Java! " +
+                "É o calor de uma boa xícara que dá a ele o foco necessário para ouvir com atenção e responder sempre com um sorriso e um abraço em forma de palavras.\n\n" +
                 "REGRAS CRÍTICAS DE FORMATAÇÃO DA RESPOSTA:\n" +
                 "1. Responda APENAS em texto corrido e parágrafos normais.\n" +
                 "2. É TOTALMENTE PROIBIDO usar asteriscos (como **texto**) ou qualquer outra marcação Markdown.\n" +
-                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se o usuário perguntar sobre assuntos que NÃO estão nos dados abaixo (como programação, Java, piadas, culinária, receitas ou qualquer assunto Geral), responda com muito carinho que você é o assistente do SOPRO e só sabe conversar sobre este projeto. Se a informação não estiver presente de forma explícita, explique que o protótipo está em fase de validação para o Demo Day.\n\n"+
+                "3. Você deve responder com carinho a dúvidas sobre o projeto SOPRO e também sobre o gerenciamento de contas e ASSINATURAS do sistema.\n" +
                 "4. É TOTALMENTE PROIBIDO usar termos técnicos, jargões de engenharia, códigos ou nomes complexos de componentes que venham do banco de dados. Você deve traduzir essas informações para o usuário usando analogias simples e termos do dia a dia (por exemplo, em vez de 'sensor de fluxo de massa de ar', use 'o medidor que sente o ar passar').\n\n" +
                 "DIRETRIZES CRÍTICAS DE SEGURANÇA E CONTEXTO:\n" +
                 "1. O usuário JÁ ESTÁ navegando na nossa página oficial. Nunca diga para ele 'acessar o site oficial'. Oriente-o a acompanhar as novidades por aqui mesmo.\n" +
-                "2. O projeto SOPRO NÃO possui newsletter, NÃO possui e-mails de contato externos e NÃO possui formulários em outros locais.\n" +
-                "3. Baseie sua resposta RIGOROSAMENTE nos fatos reais listados abaixo. Se a informação não estiver presente de forma explícita, explique com carinho que o protótipo está em fase de validação para o Demo Day.\n\n" +
+                "2. Baseie sua resposta nos fatos reais listados abaixo. Se a informação sobre o funcionamento ou sobre as assinaturas não estiver presente de forma explícita, explique com carinho que o protótipo está em fase de validação para o Demo Day.\n\n" +
                 "DADOS REAIS DO PROJETO SOPRO:\n" +
                 "\"\"\"\n" + dadosFiltradosDoBanco + "\n\"\"\"";
 
@@ -65,7 +79,6 @@ public class ConhecimentoService {
         corpoRequisicao.put("temperature", 0.0);
 
         try {
-            // Captura o JSON bruto para evitar incompatibilidades de Parser do Spring
             String respostaRawJson = restClient.post()
                     .uri(apiUrl)
                     .header("Authorization", "Bearer " + apiKey)
