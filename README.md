@@ -84,8 +84,8 @@ graph TD
 
     %% Persistência & Motores externos
     subgraph Camada_Externos ["Persistência & Motores Externos"]
-        V[(MySQL / PostgreSQL)]:::branco
-        W[Google Gemini API]:::branco
+        V[(MySQL)]:::branco
+        W[Ollama API]:::branco
     end
 
     %% Fluxo de conexões e requisições
@@ -118,7 +118,7 @@ graph TD
 > <details>
 > <summary>Fluxo Cloud</summary>
 >   
-> ![img](docs/driagrams/Azure.jpg)
+> ![img](docs/driagrams/diagramaSyst.png)
 > 
 > </details>
 
