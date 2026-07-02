@@ -40,7 +40,22 @@ INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
 ('Validação e Respaldo Médico', 'O projeto possui forte respaldo prático. Realizamos uma pesquisa de campo coletando cinquenta e sete respostas diretamente de atuantes da área da saúde e pacientes, obtendo expressivos números de validações e feedbacks que confirmam a viabilidade clínica do dispositivo.', 'pesquisa de campo, validacao, respaldo, medico, saude, medicos, enfermeiros, profissionais, clinico, feedbacks');
 
 
+
 -- ====== SEÇÃO 3: HARDWARE E TECNOLOGIA ======
 
 
 INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES ('Como funciona a tecnologia', 'O nosso aparelho tem um medidor interno muito sensível que percebe a força do sopro da pessoa. Uma inteligência artificial traduz essa pressão de ar em comandos verbais sintetizados.', 'hardware, tecnologia, como funciona, sensor, medidor, sopro, funcionamento');
+
+-- ====== SEÇÃO 4: PLANOS E ASSINATURAS ======
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
+('Plano Essencial', 'O plano essencial oferece o recurso básico para uso do dispositivo. Inclui um filtro inteligente que identifica o sopro sem interferência de ruídos externos, calibração de sensibilidade para entender a força do sopro e relatórios de uso para acompanhamento terapêutico.', 'planos, assinatura, essencial, basico, filtro, sensibilidade, relatorio, quanto custa');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
+('Plano Plus', 'O plano plus é focado em ampliar a autonomia social e a comunicação no dia a dia. Inclui todos os recursos do plano básico e traz duas grandes vantagens: uma inteligência artificial que aprende o vocabulário do usuário e integração com o WhatsApp e redes sociais para enviar mensagens por meio de sopros.', 'planos, assinatura, plus, whatsapp, redes sociais, internet, mensagem');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
+('Plano Pro', 'O plano pro é voltado para saúde, segurança e acompanhamento médico à distância. Engloba todos os recursos dos planos anteriores e adiciona a opção de vozes personalizadas, uma IA preditiva para detecção de fadiga e prevenção de crises, e um portal de telemetria para monitoramento clínico por terapeutas e médicos em tempo real.', 'planos, assinatura, pro, profissional, telemetria, voz personalizada, fadiga, medico, saude, clinico');
+
+INSERT INTO tb_conhecimento (titulo, conteudo, metadados) VALUES
+('Como funciona a integracao com redes sociais', 'Após conectar o dispositivo a uma rede Wi-Fi, o usuário consegue enviar mensagens e interagir no WhatsApp e outras redes sociais utilizando apenas os padrões de seus sopros, promovendo autonomia também no ambiente digital.', 'whatsapp, redes sociais, wi-fi, internet, mensagem, integracao');
